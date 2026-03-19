@@ -1,7 +1,7 @@
 name: Deploy SDP_WEB_WorkCalendar (Nuxt) to IIS
 
 
-
+on:
   push:
     branches:
       - Deploy
