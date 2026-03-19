@@ -20,5 +20,5 @@ jobs:
       backup_keep: 5
       post_deploy_script: |
         cd C:\inetpub\wwwroot\Work_Calendar
-        pm2 startOrRestart ecosystem.config.cjs --env production
+        pm2 restart WorkCalendar
         pm2 save
