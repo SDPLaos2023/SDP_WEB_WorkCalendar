@@ -18,7 +18,15 @@ jobs:
       build_script: 'build'
       build_output: '.output'
       backup_keep: 5
-      post_deploy_script: |
-        cd C:\inetpub\wwwroot\Work_Calendar
-        pm2 restart WorkCalendar
-        pm2 save
+
+  # เพิ่ม Job ใหม่ทำงานต่อจาก Job แรกเพื่อสั่ง PM2
+  post-deploy:
+    needs: call-deploy # สั่งให้ทำงานหลังจาก call-deploy เสร็จเท่านั้น
+    runs-on: ['self-hosted', 'TDP-IMMIGRATION']
+    steps:
+      - name: Restart PM2 and Save
+        shell: cmd
+        run: |
+          cd C:\inetpub\wwwroot\Work_Calendar
+          pm2 startOrRestart ecosystem.config.cjs --env production
+          pm2 save
