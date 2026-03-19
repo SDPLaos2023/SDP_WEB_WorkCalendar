@@ -1,12 +1,28 @@
 name: Deploy SDP_WEB_WorkCalendar (Nuxt) to IIS
 
-on:
+
+
   push:
     branches:
       - Deploy
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm run test
+
   call-deploy:
+    needs: test
     uses: SDPLaos2023/github-workflows/.github/workflows/deploy-iis-nuxt.yml@main
     with:
       app_pool: 'WorkCalendar'
