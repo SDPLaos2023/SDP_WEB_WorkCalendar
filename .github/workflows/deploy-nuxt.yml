@@ -18,15 +18,7 @@ jobs:
       build_script: 'build'
       build_output: '.output'
       backup_keep: 5
-
-  # เพิ่ม Job นี้เข้าไปเพื่อ Restart PM2
-  restart-pm2:
-    needs: call-deploy
-    runs-on: TDP-IMMIGRATION
-    steps:
-      - name: Restart PM2 Process
-        shell: pwsh
-        run: |
-          cd C:\inetpub\wwwroot\Work_Calendar
-          pm2 startOrRestart ecosystem.config.cjs --env production
-          pm2 save
+      post_deploy_script: |
+        cd C:\inetpub\wwwroot\Work_Calendar
+        pm2 startOrRestart ecosystem.config.cjs --env production
+        pm2 save
