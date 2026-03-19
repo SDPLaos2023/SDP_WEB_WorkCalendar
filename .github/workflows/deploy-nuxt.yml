@@ -10,7 +10,7 @@ jobs:
     uses: SDPLaos2023/github-workflows/.github/workflows/deploy-iis-nuxt.yml@main
     with:
       app_pool: 'WorkCalendar'
-      deploy_path: 'C:\inetpub\wwwroot\Work_Calendar'
+      deploy_path: 'C:\inetpub\wwwroot\Work_Calendar\.output'
       backup_prefix: 'WorkCalendar'
       runner_label: 'TDP-IMMIGRATION'
       package_manager: 'npm'
