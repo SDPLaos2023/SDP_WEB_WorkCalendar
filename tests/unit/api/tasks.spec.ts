@@ -15,7 +15,8 @@ vi.mock('../../../server/utils/prisma', () => ({
         planTask: {
             findFirst: vi.fn(),
             create: vi.fn(),
-            update: vi.fn()
+            update: vi.fn(),
+            findUnique: vi.fn()
         },
         workPlan: {
             findFirst: vi.fn()
@@ -103,7 +104,7 @@ describe('Task and Actual API Handlers', () => {
 
             const event = mockEvent()
             event.context.params.id = 'p-1'
-            
+
             await expect(handler(event)).rejects.toThrow('Assigned user must be an OFFICER')
         })
     })
@@ -160,7 +161,7 @@ describe('Task and Actual API Handlers', () => {
 
             const event = mockEvent()
             event.context.params.taskId = 't-1'
-            
+
             await expect(handler(event)).rejects.toThrow('Already updated for this period')
         })
     })
