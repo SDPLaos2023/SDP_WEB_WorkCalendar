@@ -1,9 +1,10 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
 
 @theme {
-  --font-sans: 'Inter', 'Public Sans', 'Noto Sans Lao', sans-serif;
-  --font-display: 'Inter', 'Outfit', sans-serif;
+  --font-sans: 'Times New Roman', 'Phetsarath OT', 'Prompt', sans-serif;
+  --font-display: 'Times New Roman', 'Phetsarath OT', 'Prompt', sans-serif;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
@@ -20,6 +21,27 @@
     background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px);
     background-size: 32px 32px;
     background-attachment: fixed;
+
+    /* Base Font Stacks */
+    --font-en: 'Times New Roman', Times, serif;
+    --font-lo: 'Phetsarath OT', 'Noto Sans Lao', sans-serif;
+    --font-th: 'Prompt', 'Kanit', sans-serif;
+  }
+
+  /* Language Specific Overrides */
+  html:lang(lo) {
+    --font-sans: var(--font-en), var(--font-lo);
+    --font-display: var(--font-en), var(--font-lo);
+  }
+
+  html:lang(th) {
+    --font-sans: var(--font-en), var(--font-th);
+    --font-display: var(--font-en), var(--font-th);
+  }
+
+  html:lang(en) {
+    --font-sans: var(--font-en), 'Arial', sans-serif;
+    --font-display: var(--font-en), 'Arial', sans-serif;
   }
 
   .dark {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import auth from '~/middleware/auth'
@@ -41,18 +42,18 @@ onMounted(() => {
   fetchData()
 })
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'planName',
-    header: 'Plan Name'
+    header: t('plans.title')
   },
   {
     accessorKey: 'department',
-    header: 'Department'
+    header: t('plans.department')
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }) => {
       const status = row.getValue('status') as string
       let color = 'neutral'
@@ -64,17 +65,17 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'totalTasks',
-    header: 'Total Tasks'
+    header: t('tasks.title')
   },
   {
     accessorKey: 'projectAvgCompletion',
-    header: 'Proj. Avg %'
+    header: t('tasks.completion') + ' (%)'
   },
   {
     accessorKey: 'routineComplianceAvg',
-    header: 'Rout. Comp %'
+    header: t('tasks.compliance') + ' (%)'
   }
-]
+])
 </script>
 
 <template>
@@ -87,10 +88,10 @@ const columns: TableColumn<any>[] = [
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
-        <h1 class="text-2xl font-bold font-heading">Work Plan Summary Report</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 font-medium">Aggregate metrics for all department plans in {{ currentFilters.year }}</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('reports.work_plan_summary') }}</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.work_plan_summary_desc') }}</p>
       </div>
 
       <ExportButtons 
@@ -112,7 +113,7 @@ const columns: TableColumn<any>[] = [
             <template #empty-state>
                 <div class="flex flex-col items-center justify-center py-10 gap-3">
                     <UIcon name="i-heroicons-document-magnifying-glass" class="text-4xl text-neutral-300" />
-                    <p class="text-neutral-400">No work plans found for the selected filters.</p>
+                    <p class="text-neutral-400">{{ t('common.none') }}</p>
                 </div>
             </template>
         </UTable>

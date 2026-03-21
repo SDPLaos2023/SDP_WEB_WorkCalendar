@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 definePageMeta({
   middleware: 'auth'
 })
@@ -40,7 +41,7 @@ const formatDate = (date: string) => {
 
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
-    <UButton to="/tasks" variant="ghost" icon="i-heroicons-arrow-left" color="neutral">Back to My Tasks</UButton>
+    <UButton to="/tasks" variant="ghost" icon="i-heroicons-arrow-left" color="neutral">{{ t('common.back') }}</UButton>
 
     <div v-if="loading" class="space-y-4">
         <USkeleton class="h-10 w-1/2" />
@@ -49,9 +50,9 @@ const formatDate = (date: string) => {
 
     <div v-else-if="error || !task" class="text-center py-20 bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
         <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-error-500 mb-4" />
-        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-2">{{ error || 'Task Not Found' }}</h3>
-        <p class="text-neutral-500 mb-6">We couldn't retrieve the details for this task. It might have been deleted or you may not have permission to view it.</p>
-        <UButton to="/tasks" color="neutral" variant="ghost">Return to My Tasks</UButton>
+        <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-2">{{ error || t('common.none') }}</h3>
+        <p class="text-neutral-500 mb-6">{{ t('common.error') }}</p>
+        <UButton to="/tasks" color="neutral" variant="ghost">{{ t('common.back') }}</UButton>
     </div>
 
     <div v-else class="space-y-6">
@@ -64,12 +65,12 @@ const formatDate = (date: string) => {
                 <h1 class="text-3xl font-bold font-heading">{{ task.taskName }}</h1>
                 <p class="text-neutral-500">{{ task.workPlan?.title }}</p>
             </div>
-            <UButton size="xl" color="primary" icon="i-heroicons-plus" @click="isActualModalOpen = true">Submit Update</UButton>
+            <UButton size="xl" color="primary" icon="i-heroicons-plus" @click="isActualModalOpen = true">{{ t('tasks.update_progress') }}</UButton>
         </header>
 
         <UCard v-if="task.description">
             <template #header>
-                <h3 class="font-bold">Description</h3>
+                <h3 class="font-bold">{{ t('common.description') }}</h3>
             </template>
             <p class="whitespace-pre-wrap">{{ task.description }}</p>
         </UCard>
@@ -77,7 +78,7 @@ const formatDate = (date: string) => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <UCard v-if="task.taskType === 'ROUTINE'">
                 <template #header>
-                    <h3 class="font-bold">Compliance Status</h3>
+                    <h3 class="font-bold">{{ t('tasks.compliance') }}</h3>
                 </template>
                 <div v-if="task.compliance" class="space-y-4">
                     <div class="flex justify-between items-end">
@@ -90,7 +91,7 @@ const formatDate = (date: string) => {
 
             <UCard v-else>
                 <template #header>
-                    <h3 class="font-bold">Project Timeline</h3>
+                    <h3 class="font-bold">{{ t('tasks.project') }}</h3>
                 </template>
                 <div class="space-y-2">
                     <div class="flex justify-between">
@@ -102,7 +103,7 @@ const formatDate = (date: string) => {
                         <span class="font-medium">{{ formatDate(task.plannedEnd) }}</span>
                     </div>
                     <div class="flex justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                        <span class="text-neutral-500">Current Status</span>
+                        <span class="text-neutral-500">{{ t('common.status') }}</span>
                         <UBadge :label="task.status" color="primary" />
                     </div>
                 </div>
@@ -110,11 +111,11 @@ const formatDate = (date: string) => {
 
             <UCard>
                 <template #header>
-                    <h3 class="font-bold">Update History</h3>
+                    <h3 class="font-bold">{{ t('tasks.history') }}</h3>
                 </template>
                 <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                     <div v-if="!task.actuals?.length" class="text-center py-10 text-neutral-400">
-                        No updates Yet.
+                        {{ t('common.none') }}
                     </div>
                     <div v-for="actual in task.actuals" :key="actual.id" class="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-100 dark:border-neutral-800 space-y-2">
                         <div class="flex justify-between">

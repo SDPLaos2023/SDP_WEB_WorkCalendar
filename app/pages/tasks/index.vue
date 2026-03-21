@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 
@@ -10,11 +11,11 @@ const { user } = useAuth()
 const { tasks, fetchMyTasks, loading } = usePlanTask()
 const toast = useToast()
 
-const tabs = [
-  { label: 'Routine', icon: 'i-heroicons-arrow-path', slot: 'routine' },
-  { label: 'Projects', icon: 'i-heroicons-briefcase', slot: 'projects' },
-  { label: 'All Tasks', icon: 'i-heroicons-list-bullet', slot: 'all' }
-]
+const tabs = computed(() => [
+  { label: t('tasks.routine'), icon: 'i-heroicons-arrow-path', slot: 'routine' },
+  { label: t('tasks.project'), icon: 'i-heroicons-briefcase', slot: 'projects' },
+  { label: t('common.all'), icon: 'i-heroicons-list-bullet', slot: 'all' }
+])
 
 const UBadge = resolveComponent('UBadge')
 
@@ -34,18 +35,18 @@ const priorityColors: Record<string, any> = {
   'CRITICAL': 'error'
 }
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'taskName',
-    header: 'Task Name'
+    header: t('tasks.name')
   },
   {
     accessorKey: 'workPlan.title',
-    header: 'Work Plan'
+    header: t('plans.title')
   },
   {
     accessorKey: 'priority',
-    header: 'Priority',
+    header: t('common.priority'),
     cell: ({ row }) => h(UBadge, { 
       label: row.getValue('priority'), 
       color: priorityColors[row.getValue('priority') as string] || 'neutral', 
@@ -54,9 +55,9 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }) => h(UBadge, { 
-      label: row.getValue('status'), 
+      label: (row.getValue('status') as string).replace('_', ' '), 
       color: statusColors[row.getValue('status') as string] || 'neutral' 
     })
   },
@@ -72,7 +73,7 @@ const columns: TableColumn<any>[] = [
       })
     ])
   }
-]
+])
 
 onMounted(() => {
   fetchMyTasks()
@@ -92,10 +93,10 @@ const getTaskComplianceColor = (pct: number) => {
   <div class="space-y-6">
     <header class="flex justify-between items-end">
       <div>
-        <h1 class="text-3xl font-bold font-heading">My Assignments</h1>
-        <p class="text-neutral-500 font-medium">Tracking tasks assigned to {{ user?.firstName }} {{ user?.lastName }}</p>
+        <h1 class="text-3xl font-bold font-heading">{{ t('tasks.my_tasks') }}</h1>
+        <p class="text-neutral-500 font-medium">{{ t('tasks.my_tasks_sub') }}</p>
       </div>
-      <UButton icon="i-heroicons-arrow-path" color="neutral" variant="ghost" :loading="loading" @click="fetchMyTasks">Refresh</UButton>
+      <UButton icon="i-heroicons-arrow-path" color="neutral" variant="ghost" :loading="loading" @click="fetchMyTasks">{{ t('common.refresh') }}</UButton>
     </header>
 
     <div v-if="loading && tasks.length === 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -104,14 +105,20 @@ const getTaskComplianceColor = (pct: number) => {
 
     <div v-else-if="tasks.length === 0" class="py-20 text-center bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
       <UIcon name="i-heroicons-clipboard-document" class="w-12 h-12 text-neutral-300 mb-4" />
-      <h3 class="text-lg font-bold text-neutral-900 dark:text-white">No tasks assigned yet</h3>
-      <p class="text-neutral-500">When your supervisor assigns you a task, it will appear here.</p>
+      <h3 class="text-lg font-bold text-neutral-900 dark:text-white">{{ t('tasks.no_tasks') }}</h3>
+      <p class="text-neutral-500">{{ t('tasks.no_tasks_sub') }}</p>
     </div>
 
     <UTabs v-else :items="tabs" class="w-full">
       <template #routine>
         <div class="space-y-4 pt-4">
-            <div v-if="routineTasks.length === 0" class="text-neutral-500 py-10 text-center">No routine tasks found.</div>
+            <div v-if="routineTasks.length === 0" class="flex flex-col items-center justify-center py-12 gap-3 text-center">
+              <div class="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                <UIcon name="i-heroicons-arrow-path" class="text-xl text-neutral-400" />
+              </div>
+              <p class="font-bold text-neutral-700 dark:text-neutral-300">{{ t('tasks.no_routine') }}</p>
+              <p class="text-sm text-neutral-500">{{ t('tasks.no_tasks_sub') }}</p>
+            </div>
             <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <UCard v-for="task in routineTasks" :key="task.id" class="hover:border-primary transition-colors cursor-pointer group" @click="navigateTo(`/tasks/${task.id}`)">
                 <div class="flex justify-between items-start">
@@ -125,10 +132,10 @@ const getTaskComplianceColor = (pct: number) => {
                              <div class="w-24 bg-gray-200 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
                                 <div class="h-full" :class="`bg-${getTaskComplianceColor((task as any).compliance.compliancePct)}-500`" :style="`width: ${(task as any).compliance.compliancePct}%`" />
                              </div>
-                             <span class="text-xs font-medium" :class="`text-${getTaskComplianceColor((task as any).compliance.compliancePct)}-600`">{{ (task as any).compliance.compliancePct }}% Compliance</span>
+                             <span class="text-xs font-medium" :class="`text-${getTaskComplianceColor((task as any).compliance.compliancePct)}-600`">{{ (task as any).compliance.compliancePct }}% {{ t('tasks.compliance') }}</span>
                         </div>
                     </div>
-                    <UButton icon="i-heroicons-pencil-square" color="primary" variant="soft" @click.stop="navigateTo(`/tasks/${task.id}`)">Report</UButton>
+                    <UButton icon="i-heroicons-pencil-square" color="primary" variant="soft" @click.stop="navigateTo(`/tasks/${task.id}`)">{{ t('tasks.report_progress') }}</UButton>
                 </div>
                 </UCard>
             </div>
@@ -137,13 +144,19 @@ const getTaskComplianceColor = (pct: number) => {
 
       <template #projects>
         <div class="space-y-4 pt-4">
-            <div v-if="projectTasks.length === 0" class="text-neutral-500 py-10 text-center">No project tasks found.</div>
+            <div v-if="projectTasks.length === 0" class="flex flex-col items-center justify-center py-12 gap-3 text-center">
+              <div class="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                <UIcon name="i-heroicons-briefcase" class="text-xl text-neutral-400" />
+              </div>
+              <p class="font-bold text-neutral-700 dark:text-neutral-300">{{ t('tasks.no_project') }}</p>
+              <p class="text-sm text-neutral-500">{{ t('tasks.no_tasks_sub') }}</p>
+            </div>
             <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <UCard v-for="task in projectTasks" :key="task.id" class="hover:border-primary transition-colors cursor-pointer group" @click="navigateTo(`/tasks/${task.id}`)">
                 <div class="flex justify-between items-start">
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
-                            <UBadge :label="task.status" :color="statusColors[task.status] || 'neutral'" size="sm" />
+                             <UBadge :label="task.status.replace('_', ' ')" :color="statusColors[task.status] || 'neutral'" size="sm" />
                             <span class="text-xs text-neutral-500">{{ task.workPlan?.title }}</span>
                         </div>
                         <h3 class="font-bold text-lg group-hover:text-primary leading-tight">{{ task.taskName }}</h3>
@@ -152,7 +165,7 @@ const getTaskComplianceColor = (pct: number) => {
                             {{ task.plannedStart ? new Date(task.plannedStart).toLocaleDateString() : '?' }} - {{ task.plannedEnd ? new Date(task.plannedEnd).toLocaleDateString() : '?' }}
                         </div>
                     </div>
-                    <UButton icon="i-heroicons-bolt" color="primary" variant="soft" @click.stop="navigateTo(`/tasks/${task.id}`)">Update</UButton>
+                    <UButton icon="i-heroicons-bolt" color="primary" variant="soft" @click.stop="navigateTo(`/tasks/${task.id}`)">{{ t('tasks.update_progress') }}</UButton>
                 </div>
                 </UCard>
             </div>

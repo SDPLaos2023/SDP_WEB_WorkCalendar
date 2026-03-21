@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { format } from 'date-fns'
@@ -39,10 +40,10 @@ const UBadge = resolveComponent('UBadge')
 const UProgress = resolveComponent('UProgress')
 
 const kpis = computed(() => [
-  { label: 'Total Plans', value: summary.value?.totalPlans || 0, icon: 'i-heroicons-document-text' },
-  { label: 'Active Plans', value: summary.value?.activePlans || 0, icon: 'i-heroicons-play' },
-  { label: 'Project Avg %', value: `${summary.value?.projectAvgCompletion || 0}%`, icon: 'i-heroicons-chart-bar' },
-  { label: 'Routine Compliance', value: `${summary.value?.routineComplianceAvg || 0}%`, icon: 'i-heroicons-check-circle' }
+  { label: t('dashboard.total_plans'), value: summary.value?.totalPlans || 0, icon: 'i-heroicons-document-text' },
+  { label: t('dashboard.active_plans'), value: summary.value?.activePlans || 0, icon: 'i-heroicons-play' },
+  { label: t('dashboard.project_avg'), value: `${summary.value?.projectAvgCompletion || 0}%`, icon: 'i-heroicons-chart-bar' },
+  { label: t('dashboard.compliance_avg'), value: `${summary.value?.routineComplianceAvg || 0}%`, icon: 'i-heroicons-check-circle' }
 ])
 
 const projectColumns: TableColumn<any>[] = [
@@ -64,7 +65,7 @@ const projectColumns: TableColumn<any>[] = [
     cell: ({ row }) => {
       const status = row.getValue('status') as string
       return h(UBadge, {
-        label: status,
+        label: status.replace('_', ' '),
         color: status === 'COMPLETED' ? 'success' : 'primary',
         variant: 'subtle'
       })
@@ -139,8 +140,8 @@ const trendEndDate = computed(() => {
   <div class="space-y-8">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold font-heading">Dashboard</h1>
-        <p class="text-gray-500 dark:text-gray-400 font-medium">Overview of your work performance</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('dashboard.title') }}</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">{{ t('dashboard.subtitle') }}</p>
       </div>
     </header>
 
@@ -171,13 +172,13 @@ const trendEndDate = computed(() => {
             <template #header>
                 <h3 class="font-bold font-heading flex items-center gap-2">
                     <UIcon name="i-heroicons-chart-pie" />
-                    Task Status Summary
+                    {{ t('dashboard.status_summary') }}
                 </h3>
             </template>
             <div class="space-y-4">
                 <div v-for="(count, status) in (summary?.statusBreakdown || {})" :key="status" class="space-y-1">
                     <div class="flex justify-between items-center text-xs">
-                        <span class="font-bold text-neutral-500">{{ status }}</span>
+                        <span class="font-bold text-neutral-500">{{ (status as string).replace('_', ' ') }}</span>
                         <span class="font-bold">{{ count }}</span>
                     </div>
                     <UProgress 
@@ -195,7 +196,7 @@ const trendEndDate = computed(() => {
             <template #header>
                 <h3 class="font-bold font-heading flex items-center gap-2">
                     <UIcon name="i-heroicons-academic-cap" />
-                    Top Performing Depts
+                    {{ t('dashboard.top_depts') }}
                 </h3>
             </template>
             <div class="space-y-6">
@@ -218,7 +219,7 @@ const trendEndDate = computed(() => {
                 <div class="flex items-center justify-between">
                     <h3 class="font-bold font-heading flex items-center gap-2">
                         <UIcon name="i-heroicons-bolt" />
-                        7-Day Activity Trend
+                        {{ t('dashboard.trend') }}
                     </h3>
                     <UBadge variant="soft" color="primary" size="sm">{{ summary?.updatesToday || 0 }} today</UBadge>
                 </div>
@@ -252,9 +253,9 @@ const trendEndDate = computed(() => {
           <div class="flex items-center justify-between">
             <h3 class="font-bold font-heading flex items-center gap-2">
                 <UIcon name="i-heroicons-rocket-launch" class="text-primary" />
-                Project Progress
+                {{ t('dashboard.project_progress') }}
             </h3>
-            <UButton to="/plans" variant="ghost" size="sm" icon="i-heroicons-arrow-right">View All</UButton>
+            <UButton to="/plans" variant="ghost" size="sm" icon="i-heroicons-arrow-right">{{ t('dashboard.view_all') }}</UButton>
           </div>
         </template>
         <UTable :data="progress" :columns="projectColumns" :loading="summaryLoading" />
@@ -265,7 +266,7 @@ const trendEndDate = computed(() => {
         <template #header>
           <h3 class="font-bold font-heading flex items-center gap-2">
               <UIcon name="i-heroicons-calendar" class="text-primary" />
-              Routine Compliance
+              {{ t('dashboard.routine_compliance') }}
           </h3>
         </template>
         <UTable :data="compliance" :columns="complianceColumns" :loading="summaryLoading" />

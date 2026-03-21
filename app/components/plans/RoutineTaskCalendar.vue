@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import {
   startOfMonth,
   endOfMonth,
@@ -195,9 +196,9 @@ const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
           v-model="viewType"
           class="w-auto"
           :items="[
-            { label: 'Month', value: 'MONTH' },
-            { label: 'Quarter', value: 'QUARTER' },
-            { label: 'Year', value: 'YEAR' }
+            { label: t('common.month'), value: 'MONTH' },
+            { label: t('common.quarter'), value: 'QUARTER' },
+            { label: t('common.year'), value: 'YEAR' }
           ]"
           :ui="{ list: { class: 'h-8 p-0.5' } }"
         />
@@ -205,7 +206,7 @@ const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
       <div class="flex gap-1">
         <UButton icon="i-heroicons-chevron-left" variant="ghost" color="neutral" size="sm" @click="prevMonth" />
-        <UButton label="Today" variant="subtle" color="neutral" size="sm" @click="currentMonth = new Date()" />
+        <UButton :label="t('common.today')" variant="subtle" color="neutral" size="sm" @click="currentMonth = new Date()" />
         <UButton icon="i-heroicons-chevron-right" variant="ghost" color="neutral" size="sm" @click="nextMonth" />
       </div>
     </div>
@@ -235,13 +236,13 @@ const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
             <template v-if="getActualForDate(date)">
               <div class="rounded px-1.5 py-0.5 text-[10px] font-bold flex items-center gap-1 overflow-hidden whitespace-nowrap" :class="{'bg-success-100 text-success-700': getActualForDate(date).status === 'DONE', 'bg-warning-100 text-warning-700': getActualForDate(date).status === 'PARTIAL', 'bg-error-100 text-error-700': getActualForDate(date).status === 'NOT_DONE'}">
                 <UIcon :name="getActualForDate(date).status === 'DONE' ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'" class="w-2.5 h-2.5" />
-                <span>{{ getActualForDate(date).status }}</span>
+                <span>{{ getActualForDate(date).status.replace('_', ' ') }}</span>
               </div>
             </template>
             <template v-else-if="isExpectedAndMissing(date)">
                <div class="rounded px-1.5 py-0.5 text-[10px] font-bold flex items-center gap-1 border border-dashed" :class="isBefore(date, startOfDay(new Date())) ? 'bg-error-50 text-error-600 border-error-200' : 'bg-neutral-50 text-neutral-400 border-neutral-300'">
                  <UIcon :name="isBefore(date, startOfDay(new Date())) ? 'i-heroicons-exclamation-circle' : 'i-heroicons-clock'" class="w-2.5 h-2.5" />
-                 <span>{{ isBefore(date, startOfDay(new Date())) ? 'Missing' : 'Pending' }}</span>
+                 <span>{{ isBefore(date, startOfDay(new Date())) ? t('tasks.status_not_done') : t('tasks.status_pending') }}</span>
                </div>
             </template>
           </div>
@@ -280,16 +281,16 @@ const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     <!-- Legend -->
     <div class="p-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 opacity-80 flex flex-wrap gap-4 text-[10px] uppercase font-bold tracking-wider text-neutral-500">
         <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-success-500"></span> Completed
+          <span class="w-2 h-2 rounded-full bg-success-500"></span> {{ t('tasks.status_done') }}
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-warning-500"></span> Partial
+          <span class="w-2 h-2 rounded-full bg-warning-500"></span> {{ t('tasks.status_partial') }}
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-error-500"></span> Not Done
+          <span class="w-2 h-2 rounded-full bg-error-500"></span> {{ t('tasks.status_not_done') }}
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded border border-dashed border-neutral-400"></span> Expected
+          <span class="w-2 h-2 rounded border border-dashed border-neutral-400"></span> {{ t('tasks.status_pending') }}
         </div>
     </div>
   </div>

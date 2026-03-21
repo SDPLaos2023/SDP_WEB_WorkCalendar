@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import SectionHeader from './SectionHeader.vue'
 import TaskPairRow from './TaskPairRow.vue'
 
@@ -24,18 +25,18 @@ const weeks = ['W1', 'W2', 'W3', 'W4']
         <thead class="sticky top-0 z-30 bg-neutral-900 text-white">
           <tr>
             <th rowspan="2" class="sticky left-0 z-40 bg-neutral-900 px-3 py-3 text-xs font-bold border-r border-neutral-700 w-[40px]">No</th>
-            <th rowspan="2" class="sticky left-[41px] z-40 bg-neutral-900 px-3 py-3 text-left text-xs font-bold border-r border-neutral-700 min-w-[200px] max-w-[300px]">Task Name</th>
-            <th rowspan="2" class="sticky left-[241px] z-40 bg-neutral-900 px-2 py-3 text-xs font-bold border-r border-neutral-700 w-[60px]">Owner</th>
-            <th rowspan="2" class="sticky left-[301px] z-40 bg-neutral-900 px-2 py-3 text-left text-xs font-bold border-r border-neutral-700 w-[80px]">Person</th>
-            <th rowspan="2" class="sticky left-[381px] z-40 bg-neutral-900 px-2 py-3 text-xs font-bold border-r border-neutral-700 w-[70px]">Freq</th>
+            <th rowspan="2" class="sticky left-[41px] z-40 bg-neutral-900 px-3 py-3 text-left text-xs font-bold border-r border-neutral-700 min-w-[200px] max-w-[300px]">{{ t('tasks.name') }}</th>
+            <th rowspan="2" class="sticky left-[241px] z-40 bg-neutral-900 px-2 py-3 text-xs font-bold border-r border-neutral-700 w-[60px]">{{ t('management.department') }}</th>
+            <th rowspan="2" class="sticky left-[301px] z-40 bg-neutral-900 px-2 py-3 text-left text-xs font-bold border-r border-neutral-700 w-[80px]">{{ t('tasks.assign_to') }}</th>
+            <th rowspan="2" class="sticky left-[381px] z-40 bg-neutral-900 px-2 py-3 text-xs font-bold border-r border-neutral-700 w-[70px]">{{ t('tasks.frequency') }}</th>
             <th rowspan="2" class="sticky left-[451px] z-40 bg-neutral-900 px-2 py-3 text-xs font-bold border-r border-neutral-700 w-[40px]">P/A</th>
             
             <th v-for="month in months" :key="month" colspan="4" class="px-2 py-1.5 text-center text-[10px] font-bold border-r border-neutral-700 bg-neutral-800">
               {{ month }}
             </th>
 
-            <th rowspan="2" class="px-3 py-3 text-xs font-bold border-l border-neutral-700 w-[80px]">Status</th>
-            <th rowspan="2" class="px-3 py-3 text-left text-xs font-bold w-[150px]">Remarks</th>
+            <th rowspan="2" class="px-3 py-3 text-xs font-bold border-l border-neutral-700 w-[80px]">{{ t('common.status') }}</th>
+            <th rowspan="2" class="px-3 py-3 text-left text-xs font-bold w-[150px]">{{ t('common.description') }}</th>
           </tr>
           <tr class="bg-neutral-800">
             <template v-for="month in months" :key="month">
@@ -63,7 +64,7 @@ const weeks = ['W1', 'W2', 'W3', 'W4']
     <!-- Empty State -->
     <div v-if="!data.sections?.length" class="flex flex-col items-center justify-center py-20 bg-neutral-50 dark:bg-neutral-900/10">
       <UIcon name="i-heroicons-document-text" class="text-5xl text-neutral-300 mb-2" />
-      <p class="text-neutral-500 font-medium">No work plan data found for this selection.</p>
+      <p class="text-neutral-500 font-medium">{{ t('common.none') }}</p>
     </div>
   </div>
 </template>

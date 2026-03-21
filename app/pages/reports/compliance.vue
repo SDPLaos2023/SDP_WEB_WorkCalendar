@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import { format } from 'date-fns'
 import type { TableColumn } from '@nuxt/ui'
@@ -42,18 +43,18 @@ onMounted(() => {
   fetchData()
 })
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'taskName',
-    header: 'Routine Task'
+    header: t('tasks.name')
   },
   {
     accessorKey: 'assignedTo',
-    header: 'Officer'
+    header: t('tasks.assign_to')
   },
   {
     accessorKey: 'recurrence',
-    header: 'Recurrence',
+    header: t('tasks.frequency'),
     cell: ({ row }) => {
       const type = row.getValue('recurrence') as string
       return h(UBadge, { label: type, variant: 'subtle', color: 'primary', size: 'sm' })
@@ -61,7 +62,7 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'compliancePct',
-    header: 'Compliance',
+    header: t('tasks.compliance'),
     cell: ({ row }) => {
       const val = row.getValue('compliancePct') as string
       const pct = parseInt(val) || 0
@@ -71,14 +72,14 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'expected',
-    header: 'Exp/Act',
+    header: t('reports.expected') + '/' + t('reports.actual'),
     cell: ({ row }) => {
       return `${row.original.completed} / ${row.original.expected}`
     }
   },
   {
     accessorKey: 'missedDates',
-    header: 'Missed Dates',
+    header: t('reports.missed_dates'),
     cell: ({ row }) => {
       const datesString = row.getValue('missedDates') as string
       if (datesString === '-') return h('span', { class: 'text-xs text-neutral-400 font-normal' }, 'Perfect')
@@ -91,11 +92,11 @@ const columns: TableColumn<any>[] = [
           variant: 'soft',
           size: 'xs'
         })),
-        dates.length > 2 ? h('span', { class: 'text-[10px] text-neutral-500 my-auto' }, `+${dates.length - 2} more`) : null
+        dates.length > 2 ? h('span', { class: 'text-[10px] text-neutral-500 my-auto' }, `+${dates.length - 2} ${t('common.more')}`) : null
       ])
     }
   }
-]
+])
 </script>
 
 <template>
@@ -108,10 +109,10 @@ const columns: TableColumn<any>[] = [
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
-        <h1 class="text-2xl font-bold font-heading">Routine Compliance Report</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 font-medium">Monitoring adherence for recurring tasks in {{ currentFilters.year }}</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('reports.compliance') }}</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.compliance_desc') }}</p>
       </div>
 
       <ExportButtons 
@@ -133,7 +134,7 @@ const columns: TableColumn<any>[] = [
             <template #empty-state>
                 <div class="flex flex-col items-center justify-center py-10 gap-3">
                     <UIcon name="i-heroicons-check-badge" class="text-4xl text-neutral-300" />
-                    <p class="text-neutral-400">No routine tasks found for this selection.</p>
+                    <p class="text-neutral-400">{{ t('common.none') }}</p>
                 </div>
             </template>
         </UTable>
