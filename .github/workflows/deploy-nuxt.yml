@@ -30,7 +30,7 @@ jobs:
       backup_prefix: 'WorkCalendar'
       runner_label: 'TDP-IMMIGRATION'
       package_manager: 'npm'
-      node_version: '22'
+      node_version: '24'
       build_script: 'build'
       build_output: '.output'
       backup_keep: 5
