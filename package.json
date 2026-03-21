@@ -19,6 +19,7 @@
     "@iconify-json/simple-icons": "^1.2.72",
     "@internationalized/date": "^3.11.0",
     "@nuxt/ui": "^4.5.1",
+    "@nuxtjs/i18n": "^10.2.3",
     "@prisma/adapter-mssql": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@tanstack/table-core": "^8.21.3",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const props = defineProps<{
   task: {
     no?: number
@@ -44,7 +45,7 @@ const isActual = (month: string, week: string) => {
       {{ task.frequency }}
     </td>
     <td class="sticky left-[451px] bg-white dark:bg-neutral-950 z-10 px-2 py-2 text-[10px] font-bold text-center text-primary-500 border-r border-neutral-200 dark:border-neutral-800 w-[40px]">
-      Plan
+      {{ t('reports.plan') || 'Plan' }}
     </td>
 
     <template v-for="month in months" :key="month">
@@ -60,7 +61,7 @@ const isActual = (month: string, week: string) => {
 
     <td class="px-3 py-2 text-xs text-center border-l border-neutral-200 dark:border-neutral-800 w-[80px]">
       <UBadge :color="task.status === 'Closed' ? 'success' : 'primary'" variant="subtle" size="xs">
-        {{ task.status }}
+        {{ task.status === 'Closed' ? t('tasks.status_done') : t('tasks.status_in_progress') }}
       </UBadge>
     </td>
     <td class="px-3 py-2 text-[10px] text-neutral-500 italic max-w-[150px] truncate">
@@ -76,7 +77,7 @@ const isActual = (month: string, week: string) => {
     <td class="sticky left-[301px] bg-white dark:bg-neutral-950 z-10 px-3 py-2 border-r border-neutral-100 dark:border-neutral-800"></td>
     <td class="sticky left-[381px] bg-white dark:bg-neutral-950 z-10 px-3 py-2 border-r border-neutral-100 dark:border-neutral-800"></td>
     <td class="sticky left-[451px] bg-white dark:bg-neutral-950 z-10 px-2 py-2 text-[10px] font-bold text-center text-green-500 border-r border-neutral-200 dark:border-neutral-800">
-      Act
+      {{ t('reports.actual') || 'Act' }}
     </td>
 
     <template v-for="month in months" :key="month">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { RowSelectionState } from '@tanstack/table-core'
@@ -12,7 +13,7 @@ const { apiFetch, user: sessionUser } = useAuth()
 const UBadge = resolveComponent('UBadge')
 const UCheckbox = resolveComponent('UCheckbox')
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     id: 'select',
     header: ({ table }) => h(UCheckbox, {
@@ -28,15 +29,15 @@ const columns: TableColumn<any>[] = [
       ariaLabel: 'Select row'
     })
   },
-  { accessorKey: 'firstName', header: 'First Name' },
-  { accessorKey: 'lastName', header: 'Last Name' },
+  { accessorKey: 'firstName', header: t('common.name') },
+  { accessorKey: 'lastName', header: t('common.name') + ' (Last)' },
   { accessorKey: 'username', header: 'Username' },
   { accessorKey: 'email', header: 'Email' },
-  { accessorKey: 'company.name', header: 'Company' },
-  { accessorKey: 'department.name', header: 'Department' },
+  { accessorKey: 'company.name', header: t('management.company') },
+  { accessorKey: 'department.name', header: t('management.department') },
   {
     accessorKey: 'role',
-    header: 'Role',
+    header: t('management.role'),
     cell: ({ row }) => {
       const role = row.getValue('role') as string
       return h(UBadge, { label: role, variant: 'subtle', size: 'sm', color: role === 'SUPER_ADMIN' ? 'error' : role === 'ADMIN_COMPANY' ? 'primary' : 'neutral' })
@@ -44,14 +45,16 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'isActive',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }) => {
       const active = row.getValue('isActive') as boolean
-      return h(UBadge, { label: active ? 'Active' : 'Inactive', color: active ? 'success' : 'error', variant: 'subtle' })
+      const activeLabel = t('plans.status_active')
+      const inactiveLabel = 'Inactive'
+      return h(UBadge, { label: active ? activeLabel : inactiveLabel, color: active ? 'success' : 'error', variant: 'subtle' })
     }
   },
   { id: 'actions', header: '' }
-]
+])
 
 const page = ref(1)
 const pageSize = ref(10)
@@ -155,10 +158,10 @@ async function onConfirmDelete() {
 function getRowItems(user: any) {
   // Prevent deleting oneself
   const actions = [
-    { label: 'Edit', icon: 'i-heroicons-pencil-square', onSelect: () => openEdit(user) }
+    { label: t('common.edit'), icon: 'i-heroicons-pencil-square', onSelect: () => openEdit(user) }
   ]
   if (user.id !== sessionUser.value?.id) {
-    actions.push({ label: 'Delete', icon: 'i-heroicons-trash', onSelect: () => startDelete(user) })
+    actions.push({ label: t('common.delete'), icon: 'i-heroicons-trash', onSelect: () => startDelete(user) })
   }
   return [actions]
 }
@@ -168,22 +171,23 @@ function getRowItems(user: any) {
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold font-heading">User Management</h1>
-        <p class="text-gray-500">Manage system access and roles</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('management.users') }}</h1>
+        <p class="text-gray-500">{{ t('management.users_subtitle') }}</p>
       </div>
     </div>
 
     <UCard>
       <div class="flex items-center justify-between mb-4 gap-4">
         <div class="flex gap-4 flex-1">
-          <UInput v-model="search" icon="i-heroicons-magnifying-glass" placeholder="Search users..." class="w-64" />
+          <UInput v-model="search" icon="i-heroicons-magnifying-glass" :placeholder="t('common.search')" class="w-64" />
           <USelect
             v-model="roleFilter"
             :items="[
-              { label: 'All Roles', value: 'all' },
+              { label: t('common.all'), value: 'all' },
               { label: 'Super Admin', value: 'SUPER_ADMIN' },
               { label: 'Company Admin', value: 'ADMIN_COMPANY' },
               { label: 'Manager', value: 'MANAGER' },
+              { label: 'Supervisor', value: 'SUPERVISOR' },
               { label: 'Officer', value: 'OFFICER' }
             ]"
             class="w-48"
@@ -191,8 +195,8 @@ function getRowItems(user: any) {
         </div>
 
         <div class="flex gap-2">
-          <UButton v-if="selection.length > 0" label="Delete Selected" icon="i-heroicons-trash" color="error" variant="soft" @click="startBulkDelete" />
-          <UButton label="Add User" icon="i-heroicons-plus" @click="openCreate" />
+          <UButton v-if="selection.length > 0" :label="t('common.delete')" icon="i-heroicons-trash" color="error" variant="soft" @click="startBulkDelete" />
+          <UButton :label="t('common.create')" icon="i-heroicons-plus" @click="openCreate" />
         </div>
       </div>
 
@@ -214,8 +218,8 @@ function getRowItems(user: any) {
 
       <div class="flex items-center justify-between mt-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-500">Total: {{ totalUsers }} users</span>
-          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }} selected)</span>
+          <span class="text-sm text-gray-500">{{ t('common.all') }}: {{ totalUsers }}</span>
+          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }})</span>
         </div>
         <UPagination v-model:page="page" :total="totalUsers" :items-per-page="pageSize" />
       </div>
@@ -225,10 +229,10 @@ function getRowItems(user: any) {
 
     <ConfirmModal
       v-model:open="isConfirmOpen"
-      :title="isBulkDelete ? 'Bulk Delete Users' : 'Delete User'"
+      :title="t('common.delete')"
       :description="isBulkDelete
-        ? `ກະລຸນາຢືນຢັນການລົບ ${selection.length} ລາຍການ? ການດຳເນີນການນີ້ບໍ່ສາມາດຍົກເລີກໄດ້.`
-        : `ກະລຸນາຢືນຢັນການລົບ ${confirmTarget?.firstName || ''} ${confirmTarget?.lastName || ''}?`"
+        ? t('plans.confirm_delete')
+        : t('plans.confirm_delete')"
       :loading="deleting"
       @confirm="onConfirmDelete"
       @close="isConfirmOpen = false"

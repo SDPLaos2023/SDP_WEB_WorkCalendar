@@ -5,7 +5,7 @@ import { updatePlanTaskSchema } from '../../../../../shared/schemas/plan-task.sc
 
 export default defineEventHandler(async (event) => {
     try {
-        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR'])
+        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR', 'OFFICER'])
         const taskId = event.context.params?.taskId
 
         if (!taskId) {
@@ -30,6 +30,8 @@ export default defineEventHandler(async (event) => {
             }
         } else if (user.role === 'MANAGER' && oldTask.workPlan.departmentId !== user.departmentId) {
             throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only edit tasks for your own department' })
+        } else if (user.role === 'OFFICER' && oldTask.workPlan.departmentId !== user.departmentId) {
+            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only edit tasks to your department plans' })
         } else if (user.role === 'ADMIN_COMPANY' && oldTask.workPlan.department.companyId !== user.companyId) {
             throw createError({ statusCode: 403, statusMessage: 'Forbidden: Access denied to other company task' })
         }
