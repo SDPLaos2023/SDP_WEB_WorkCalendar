@@ -35,9 +35,11 @@ jobs:
         run: npx prisma generate
       - name: build Nuxt app
         run: npm run build
-        with:
-          name: output
-          path: C:\inetpub\wwwroot\Work_Calendar\.output
+      - name: Copy build to IIS folder
+        shell: cmd
+        run: |
+          if exist C:\inetpub\wwwroot\Work_Calendar\prd rmdir /s /q C:\inetpub\wwwroot\Work_Calendar\prd
+          xcopy .output C:\inetpub\wwwroot\Work_Calendar\prd /E /I /Y
   pm2_restart:
     needs: deploy
     runs-on: ["self-hosted", "TDP-IMMIGRATION"]
