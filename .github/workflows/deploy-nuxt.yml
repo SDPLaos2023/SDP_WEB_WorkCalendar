@@ -45,6 +45,7 @@ jobs:
     runs-on: ["self-hosted", "TDP-IMMIGRATION"]
     steps:
       - name: Start/Restart PM2
+        shell: cmd
         run: |
           cd C:\inetpub\wwwroot\Work_Calendar
           pm2 startOrRestart ecosystem.config.cjs --env production
