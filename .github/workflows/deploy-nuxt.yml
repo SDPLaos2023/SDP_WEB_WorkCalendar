@@ -1,5 +1,4 @@
-name: Deploy SDP_WEB_WorkCalendar (Nuxt) to IIS
-
+name: Deploy SDP_WEB_WorkCalendar (Nuxt) with PM2
 
 on:
   push:
@@ -7,7 +6,7 @@ on:
       - Deploy
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,29 +19,24 @@ jobs:
         run: npm install
       - name: Run tests
         run: npm run test
+      - name: Build project
+        run: npm run build
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: output
+          path: .output
 
-  call-deploy:
-    needs: test
-    uses: SDPLaos2023/github-workflows/.github/workflows/deploy-iis-nuxt.yml@main
-    with:
-      app_pool: 'WorkCalendar'
-      deploy_path: 'C:\inetpub\wwwroot\Work_Calendar\.output'
-      backup_prefix: 'WorkCalendar'
-      runner_label: 'TDP-IMMIGRATION'
-      package_manager: 'npm'
-      node_version: '24'
-      build_script: 'build'
-      build_output: '.output'
-      backup_keep: 5
-
-  # เพิ่ม Job ใหม่ทำงานต่อจาก Job แรกเพื่อสั่ง PM2
-  post-deploy:
-    needs: call-deploy # สั่งให้ทำงานหลังจาก call-deploy เสร็จเท่านั้น
+  deploy:
+    needs: build-and-test
     runs-on: ['self-hosted', 'TDP-IMMIGRATION']
     steps:
-      - name: Restart PM2 and Save
-        shell: cmd
-        run: |
-          cd C:\inetpub\wwwroot\Work_Calendar
-          pm2 startOrRestart ecosystem.config.cjs --env production
-          pm2 save
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: output
+          path: .output
+      - name: Install dependencies
+        run: npm install
+      - name: Start/Restart PM2
+        run: pm2 startOrRestart ecosystem.config.cjs --env production && pm2 save
