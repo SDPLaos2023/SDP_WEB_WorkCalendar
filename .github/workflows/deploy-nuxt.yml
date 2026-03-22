@@ -48,5 +48,6 @@ jobs:
         shell: cmd
         run: |
           cd C:\inetpub\wwwroot\Work_Calendar
+          nvm use 24
           pm2 startOrRestart ecosystem.config.cjs --env production
           pm2 save
