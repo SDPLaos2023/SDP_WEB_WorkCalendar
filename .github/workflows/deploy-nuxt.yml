@@ -40,22 +40,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: output
-          path: .output
+          path: C:\inetpub\wwwroot\Work_Calendar\.output
+      # - name: Copy build to IIS folder
+      #   shell: cmd
+      #   run: |
+      #     if exist C:\inetpub\wwwroot\Work_Calendar\prd rmdir /s /q C:\inetpub\wwwroot\Work_Calendar\prd
+      #     xcopy .output C:\inetpub\wwwroot\Work_Calendar\prd /E /I /Y
 
   deploy:
     needs: build
-    runs-on: ['self-hosted', 'TDP-IMMIGRATION']
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - name: Copy build to IIS folder
-        run: |
-          if exist C:\inetpub\wwwroot\Work_Calendar\prd rmdir /s /q C:\inetpub\wwwroot\Work_Calendar\prd
-          xcopy .output C:\inetpub\wwwroot\Work_Calendar\prd /E /I /Y
       - name: Start/Restart PM2
         run: |
           cd C:\inetpub\wwwroot\Work_Calendar
