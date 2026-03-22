@@ -6,7 +6,7 @@ on:
       - Deploy
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,6 +19,19 @@ jobs:
         run: npm install
       - name: Run tests
         run: npm run test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install
       - name: Build project
         run: npm run build
       - name: Archive production artifacts
@@ -28,15 +41,21 @@ jobs:
           path: .output
 
   deploy:
-    needs: build-and-test
+    needs: build
     runs-on: ['self-hosted', 'TDP-IMMIGRATION']
     steps:
-      - name: Download artifact
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: output
           path: .output
-      - name: Install dependencies
-        run: npm install
       - name: Start/Restart PM2
         run: pm2 startOrRestart ecosystem.config.cjs --env production && pm2 save
