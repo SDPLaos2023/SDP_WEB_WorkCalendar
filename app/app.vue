@@ -21,16 +21,16 @@ useHead({
 })
 
 const title = 'Work Calendar'
-const description = 'A professional dashboard template built with Nuxt UI, featuring multiple pages, data visualization, and comprehensive management capabilities for creating powerful admin interfaces.'
+const description = 'Work Calendar - Annual work planning and tracking system for organizations.'
 
 useSeoMeta({
   title,
   description,
   ogTitle: title,
   ogDescription: description,
-  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/dashboard-light.png',
-  twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/dashboard-light.png',
-  twitterCard: 'summary_large_image'
+  ogImage: '/icon.svg', // Will show the site icon
+  twitterImage: '/icon.svg',
+  twitterCard: 'summary' // Use 'summary' instead of 'summary_large_image' for simple icons
 })
 </script>
 
