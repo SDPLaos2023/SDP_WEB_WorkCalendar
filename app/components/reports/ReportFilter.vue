@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const props = defineProps<{
   showDepartment?: boolean
   showWorkPlan?: boolean
@@ -101,20 +102,20 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-wrap gap-4 items-end bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm print:hidden">
-    <UFormGroup label="Year" class="w-32">
+    <UFormGroup :label="t('common.year')" class="w-32">
       <USelect v-model="filters.year" :items="years" />
     </UFormGroup>
 
-    <UFormGroup v-if="role === 'SUPER_ADMIN'" label="Company" class="w-64">
-      <USelect v-model="filters.companyId" :items="companies" label-key="name" value-key="id" placeholder="All Companies" />
+    <UFormGroup v-if="role === 'SUPER_ADMIN'" :label="t('management.company')" class="w-64">
+      <USelect v-model="filters.companyId" :items="companies" label-key="name" value-key="id" :placeholder="t('common.all')" />
     </UFormGroup>
 
-    <UFormGroup v-if="showDepartment && (role === 'SUPER_ADMIN' || role === 'ADMIN_COMPANY')" label="Department" class="w-64">
-      <USelect v-model="filters.departmentId" :items="departments" label-key="name" value-key="id" placeholder="All Departments" />
+    <UFormGroup v-if="showDepartment && (role === 'SUPER_ADMIN' || role === 'ADMIN_COMPANY')" :label="t('management.department')" class="w-64">
+      <USelect v-model="filters.departmentId" :items="departments" label-key="name" value-key="id" :placeholder="t('common.all')" />
     </UFormGroup>
 
-    <UFormGroup v-if="showWorkPlan" label="Work Plan" class="w-64">
-      <USelect v-model="filters.workPlanId" :items="workPlans" label-key="name" value-key="id" placeholder="All Plans" />
+    <UFormGroup v-if="showWorkPlan" :label="t('plans.title')" class="w-64">
+      <USelect v-model="filters.workPlanId" :items="workPlans" label-key="name" value-key="id" :placeholder="t('common.all')" />
     </UFormGroup>
 
     <slot name="extra" />

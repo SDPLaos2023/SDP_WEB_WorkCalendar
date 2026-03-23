@@ -1,54 +1,55 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import auth from '~/middleware/auth'
 
 definePageMeta({
   middleware: auth
 })
 
-const reports = [
+const reports = computed(() => [
   {
-    title: 'Work Plan Summary',
-    description: 'Overview of all work plans, task counts, and average completion/compliance.',
+    title: t('reports.work_plan_summary'),
+    description: t('reports.work_plan_summary_desc'),
     icon: 'i-heroicons-document-duplicate',
     to: '/reports/work-plan-summary',
     color: 'slate'
   },
   {
-    title: 'Annual Work Plan (Gantt)',
-    description: 'Comprehensive annual view of all tasks with weekly Plan vs Act timeline.',
+    title: t('reports.annual_plan'),
+    description: t('reports.annual_plan_desc'),
     icon: 'i-heroicons-squares-plus',
     to: '/reports/work-plan',
     color: 'orange'
   },
   {
-    title: 'Task Progress (Project)',
-    description: 'Detailed progress and latest updates for all project-based tasks.',
+    title: t('reports.task_progress'),
+    description: t('reports.task_progress_desc'),
     icon: 'i-heroicons-chart-bar',
     to: '/reports/task-progress',
     color: 'sky'
   },
   {
-    title: 'Routine Compliance',
-    description: 'Adherence report for recurring tasks, including missed periods.',
+    title: t('reports.compliance'),
+    description: t('reports.compliance_desc'),
     icon: 'i-heroicons-check-circle',
     to: '/reports/compliance',
     color: 'emerald'
   },
   {
-    title: 'KPI Achievement',
-    description: 'Measured performance percentage (Planned vs Actual) for Officers and Supervisors.',
+    title: t('reports.kpi'),
+    description: t('reports.kpi_desc'),
     icon: 'i-heroicons-trophy',
     to: '/reports/kpi',
     color: 'amber'
   },
   {
-    title: 'Officer Performance',
-    description: 'Individual performance metrics for aggregate task completion and compliance.',
+    title: t('reports.officer_performance'),
+    description: t('reports.officer_performance_desc'),
     icon: 'i-heroicons-user-group',
     to: '/reports/officer-performance',
     color: 'zinc'
   }
-]
+])
 </script>
 
 <template>
@@ -56,10 +57,10 @@ const reports = [
     <header>
       <div class="flex items-center gap-2 text-primary mb-2">
         <UIcon name="i-heroicons-presentation-chart-line" />
-        <span class="text-sm font-bold uppercase tracking-wider">Analytics</span>
+        <span class="text-sm font-bold uppercase tracking-wider">{{ t('nav.reports') }}</span>
       </div>
-      <h1 class="text-3xl font-bold font-heading">Reports Hub</h1>
-      <p class="text-neutral-500 dark:text-neutral-400 font-medium">Select a report type to view detailed analytics and export data.</p>
+      <h1 class="text-3xl font-bold font-heading">{{ t('reports.hub') }}</h1>
+      <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.hub_desc') }}</p>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

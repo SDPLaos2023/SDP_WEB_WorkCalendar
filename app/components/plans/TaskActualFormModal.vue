@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { createActualSchema } from '~~/shared/schemas/task-actual.schema'
 import type { FormSubmitEvent } from '#ui/types'
 
@@ -96,12 +97,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     })
 
     if (res.success) {
-      toast.add({ title: isEditMode.value ? 'Update successful!' : 'Progress submitted!', color: 'success' })
+      toast.add({ title: t('common.success'), color: 'success' })
       emit('success')
       open.value = false
     }
   } catch (err: any) {
-    toast.add({ title: 'Submission failed', description: err.data?.statusMessage, color: 'error' })
+    toast.add({ title: t('common.error'), description: err.data?.statusMessage, color: 'error' })
   } finally {
     loading.value = false
   }
@@ -109,27 +110,35 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="isEditMode ? 'Update Progress' : 'Submit Progress Update'" :description="isEditMode ? 'Edit your existing record for this date' : 'Report your achievement for this period'">
+  <UModal v-model:open="open" :title="isEditMode ? t('tasks.update_progress') : t('tasks.report_progress')" :description="t('common.details')">
     <template #content>
       <UForm :schema="createActualSchema" :state="state" @submit="onSubmit" class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Report Date" name="actualDate">
+          <UFormField :label="t('common.date')" name="actualDate">
             <UInput v-model="state.actualDate" type="date" class="w-full" />
           </UFormField>
 
-          <UFormField label="Frequency" name="updateType">
+          <UFormField :label="t('tasks.frequency')" name="updateType">
             <!-- Lock frequency if it's a Routine task -->
             <UInput v-if="isRoutine" :model-value="state.updateType" disabled class="w-full" />
             <USelect v-else v-model="state.updateType" :items="['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY']" class="w-full" />
           </UFormField>
         </div>
 
-        <UFormField label="Work Status" name="status">
-          <USelect v-model="state.status" :items="['DONE', 'PARTIAL', 'NOT_DONE']" class="w-full" />
+        <UFormField :label="t('common.status')" name="status">
+          <USelect 
+            v-model="state.status" 
+            :items="[
+              { label: t('tasks.status_done'), value: 'DONE' },
+              { label: t('tasks.status_partial'), value: 'PARTIAL' },
+              { label: t('tasks.status_not_done'), value: 'NOT_DONE' }
+            ]" 
+            class="w-full" 
+          />
         </UFormField>
 
         <!-- Only show Slider for Project tasks. For Routine, it's auto-set by status -->
-        <UFormField v-if="!isRoutine" :label="`Completion Percentage (${state.completionPct}%)`" name="completionPct">
+        <UFormField v-if="!isRoutine" :label="`${t('tasks.completion')} (${state.completionPct}%)`" name="completionPct">
           <div class="space-y-2">
             <UInput v-model.number="state.completionPct" type="range" :min="0" :max="100" />
             <div class="flex justify-between text-xs text-neutral-500">
@@ -142,17 +151,17 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
         <!-- Small indicator for Routine task % -->
         <div v-else class="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md">
-            <span class="text-sm font-medium">Auto-set Completion:</span>
+            <span class="text-sm font-medium">{{ t('tasks.completion') }}:</span>
             <UBadge :label="`${state.completionPct}%`" variant="subtle" color="primary" />
         </div>
 
-        <UFormField label="Note / Remark" name="note">
-          <UTextarea v-model="state.note" placeholder="What was done? Any issues?" class="w-full" />
+        <UFormField :label="t('common.description')" name="note">
+          <UTextarea v-model="state.note" class="w-full" />
         </UFormField>
 
         <div class="flex justify-end gap-3 pt-4">
-          <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false" />
-          <UButton type="submit" label="Save Changes" :loading="loading" color="primary" class="px-6 font-bold" />
+          <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
+          <UButton type="submit" :label="t('common.save')" :loading="loading" color="primary" class="px-6 font-bold" />
         </div>
       </UForm>
     </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import auth from '~/middleware/auth'
@@ -40,22 +41,22 @@ onMounted(() => {
   fetchData()
 })
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'officerName',
-    header: 'Officer Name'
+    header: t('common.name')
   },
   {
     accessorKey: 'department',
-    header: 'Department'
+    header: t('management.department')
   },
   {
     accessorKey: 'totalTasks',
-    header: 'Tasks'
+    header: t('tasks.title')
   },
   {
     accessorKey: 'pendingTasks',
-    header: 'Pending',
+    header: t('tasks.status_pending'),
     cell: ({ row }) => {
       const count = row.getValue('pendingTasks') as number
       return h(UBadge, {
@@ -68,11 +69,11 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'avgProjectPct',
-    header: 'Proj. Avg %'
+    header: t('tasks.completion') + ' (%)'
   },
   {
     accessorKey: 'avgCompliancePct',
-    header: 'Rout. Comp %',
+    header: t('tasks.compliance') + ' (%)',
     cell: ({ row }) => {
       const val = row.getValue('avgCompliancePct') as string
       const pct = parseInt(val) || 0
@@ -80,7 +81,7 @@ const columns: TableColumn<any>[] = [
       return h(UBadge, { label: val, color, variant: 'solid', size: 'sm' })
     }
   }
-]
+])
 </script>
 
 <template>
@@ -93,10 +94,10 @@ const columns: TableColumn<any>[] = [
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
-        <h1 class="text-2xl font-bold font-heading">Officer Performance Report</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 font-medium">Aggregate workload and performance metrics per officer in {{ currentFilters.year }}</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('reports.officer_performance') }}</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.officer_performance_desc') }}</p>
       </div>
 
       <ExportButtons
@@ -118,7 +119,7 @@ const columns: TableColumn<any>[] = [
             <template #empty-state>
                 <div class="flex flex-col items-center justify-center py-10 gap-3">
                     <UIcon name="i-heroicons-users" class="text-4xl text-neutral-300" />
-                    <p class="text-neutral-400">No officer data found for this selection.</p>
+                    <p class="text-neutral-400">{{ t('common.none') }}</p>
                 </div>
             </template>
         </UTable>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 const CompanySchema = z.object({
@@ -51,11 +52,11 @@ async function onSubmit(event: FormSubmitEvent<z.infer<typeof CompanySchema>>) {
       body: state
     })
 
-    useToast().add({ title: 'Success', description: `Company saved successfully`, color: 'success' })
+    useToast().add({ title: t('common.success'), description: `Company saved successfully`, color: 'success' })
     emit('success')
     open.value = false
   } catch (err: any) {
-    useToast().add({ title: 'Error', description: err.data?.statusMessage || err.message, color: 'error' })
+    useToast().add({ title: t('common.error'), description: err.data?.statusMessage || err.message, color: 'error' })
   } finally {
     loading.value = false
   }
@@ -63,16 +64,16 @@ async function onSubmit(event: FormSubmitEvent<z.infer<typeof CompanySchema>>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="company ? 'Edit Company' : 'Create Company'" :description="company ? `Editing ${company.name}` : 'Add a new company to the system'">
+  <UModal v-model:open="open" :title="company ? t('common.edit') : t('common.create')" :description="company ? `Editing ${company.name}` : 'Add a new company to the system'">
     <template #content>
       <UForm :schema="CompanySchema" :state="state" class="p-6 space-y-4" @submit="onSubmit">
-        <h3 class="text-lg font-semibold mb-4">{{ company ? 'Edit Company' : 'Create Company' }}</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ company ? t('common.edit') : t('common.create') }}</h3>
 
-        <UFormField label="Company Name" name="name">
+        <UFormField :label="t('management.company')" name="name">
           <UInput v-model="state.name" class="w-full" placeholder="Enter company name" />
         </UFormField>
 
-        <UFormField label="Company Code" name="code">
+        <UFormField label="Code" name="code">
   <UInput
     v-model="state.code"
     class="w-full uppercase"
@@ -82,8 +83,8 @@ async function onSubmit(event: FormSubmitEvent<z.infer<typeof CompanySchema>>) {
 </UFormField>
 
         <div class="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false; $emit('close')" />
-          <UButton type="submit" :label="company ? 'Update' : 'Save'" :loading="loading" />
+          <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false; $emit('close')" />
+          <UButton type="submit" :label="company ? t('common.save') : t('common.create')" :loading="loading" />
         </div>
       </UForm>
     </template>

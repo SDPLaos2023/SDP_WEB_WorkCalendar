@@ -5,7 +5,7 @@ import { createPlanTaskSchema } from '../../../../../shared/schemas/plan-task.sc
 
 export default defineEventHandler(async (event) => {
     try {
-        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR'])
+        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR', 'OFFICER'])
         const workPlanId = event.context.params?.id
 
         if (!workPlanId) {
@@ -29,6 +29,8 @@ export default defineEventHandler(async (event) => {
             }
         } else if (user.role === 'MANAGER' && workPlan.departmentId !== user.departmentId) {
             throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only add tasks to your own department plans' })
+        } else if (user.role === 'OFFICER' && workPlan.departmentId !== user.departmentId) {
+            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only add tasks to your department plans' })
         } else if (user.role === 'ADMIN_COMPANY' && workPlan.department.companyId !== user.companyId) {
             throw createError({ statusCode: 403, statusMessage: 'Forbidden: Access denied to other company work plan' })
         }
@@ -51,7 +53,7 @@ export default defineEventHandler(async (event) => {
             const assignedUser = await prisma.user.findFirst({
                 where: {
                     id: taskData.assignedToId,
-                    role: 'OFFICER',
+                    role: { in: ['MANAGER', 'SUPERVISOR', 'OFFICER'] },
                     departmentId: workPlan.departmentId,
                     deletedAt: null
                 }
@@ -60,7 +62,7 @@ export default defineEventHandler(async (event) => {
             if (!assignedUser) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: 'Assigned user must be an OFFICER in the same department as the plan'
+                    statusMessage: 'Assigned user must be in the same department and have an available role'
                 })
             }
         }

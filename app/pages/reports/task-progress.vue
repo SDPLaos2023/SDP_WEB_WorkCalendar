@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import auth from '~/middleware/auth'
@@ -43,18 +44,18 @@ onMounted(() => {
   fetchData()
 })
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'taskName',
-    header: 'Task Name'
+    header: t('tasks.name')
   },
   {
     accessorKey: 'assignedTo',
-    header: 'Assigned To'
+    header: t('tasks.assign_to')
   },
   {
     accessorKey: 'priority',
-    header: 'Priority',
+    header: t('common.priority'),
     cell: ({ row }) => {
       const priority = row.getValue('priority') as string
       let color = 'neutral'
@@ -66,7 +67,7 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }) => {
       const status = row.getValue('status') as string
       let color = 'primary'
@@ -77,7 +78,7 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'timeline',
-    header: 'Timeline',
+    header: t('common.date'),
     cell: ({ row }) => {
       const start = row.original.plannedStart
       const end = row.original.plannedEnd
@@ -86,17 +87,17 @@ const columns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'completionPct',
-    header: 'Completion',
+    header: t('tasks.completion'),
     cell: ({ row }) => {
       const val = row.getValue('completionPct') as string
       const pct = parseInt(val) || 0
       return h('div', { class: 'flex items-center gap-2' }, [
         h(UProgress, { value: pct, class: 'w-16', size: 'sm' }),
-        h('span', { class: 'text-xs text-neutral-500' }, val)
+        h('span', { class: 'text-xs text-neutral-500' }, val + '%')
       ])
     }
   }
-]
+])
 </script>
 
 <template>
@@ -109,10 +110,10 @@ const columns: TableColumn<any>[] = [
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
-        <h1 class="text-2xl font-bold font-heading">Task Progress Report</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 font-medium">Tracking all PROJECT tasks and current milestones</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('reports.task_progress') }}</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.task_progress_desc') }}</p>
       </div>
 
       <ExportButtons 
@@ -125,11 +126,11 @@ const columns: TableColumn<any>[] = [
 
     <ReportFilter show-department show-work-plan @change="handleFilterChange">
         <template #extra>
-            <UFormGroup label="Status" class="w-40">
+            <UFormGroup :label="t('common.status')" class="w-40">
                 <USelect 
                     v-model="currentFilters.status" 
                     :items="['PENDING', 'IN_PROGRESS', 'DONE', 'CANCELLED']" 
-                    placeholder="All Statuses"
+                    :placeholder="t('common.all')"
                     @change="fetchData"
                 />
             </UFormGroup>
@@ -145,7 +146,7 @@ const columns: TableColumn<any>[] = [
             <template #empty-state>
                 <div class="flex flex-col items-center justify-center py-10 gap-3">
                     <UIcon name="i-heroicons-clipboard-document-list" class="text-4xl text-neutral-300" />
-                    <p class="text-neutral-400">No project tasks found for the selected criteria.</p>
+                    <p class="text-neutral-400">{{ t('common.none') }}</p>
                 </div>
             </template>
         </UTable>

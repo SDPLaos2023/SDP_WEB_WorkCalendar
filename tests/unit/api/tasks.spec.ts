@@ -83,7 +83,7 @@ describe('Task and Actual API Handlers', () => {
             expect(prisma.planTask.create).toHaveBeenCalled()
         })
 
-        it('TC-TASK-03: should reject assignment to non-OFFICER', async () => {
+        it('TC-TASK-03: should reject assignment if user is not valid', async () => {
             const sessionUser = { id: 's-1', role: 'SUPERVISOR' }
             const { requireRole } = await import('../../../server/utils/auth-helpers')
             vi.mocked(requireRole).mockReturnValue(sessionUser)
@@ -100,12 +100,12 @@ describe('Task and Actual API Handlers', () => {
                 plannedEnd: '2024-01-10'
             }
             vi.mocked(readBody).mockResolvedValue(taskData)
-            vi.mocked(prisma.user.findFirst).mockResolvedValue(null) // Not an officer
+            vi.mocked(prisma.user.findFirst).mockResolvedValue(null) // Not a valid role or user
 
             const event = mockEvent()
             event.context.params.id = 'p-1'
 
-            await expect(handler(event)).rejects.toThrow('Assigned user must be an OFFICER')
+            await expect(handler(event)).rejects.toThrow('Assigned user must be in the same department and have an available role')
         })
     })
 

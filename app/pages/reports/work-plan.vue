@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import WorkPlanGrid from '~/components/report/WorkPlanGrid.vue'
 import auth from '~/middleware/auth'
 
@@ -58,29 +59,29 @@ const handleExcelExport = () => {
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
         <h1 class="text-2xl font-bold font-heading">
-            {{ reportData?.meta?.title || `${currentFilters.year} Work Plan Report` }}
+            {{ reportData?.meta?.title || t('reports.annual_plan') }}
         </h1>
         <div class="flex items-center gap-4 text-sm text-neutral-500 font-medium">
-            <span v-if="reportData?.meta?.date">Date: {{ reportData.meta.date }}</span>
+            <span v-if="reportData?.meta?.date">{{ t('common.date') }}: {{ reportData.meta.date }}</span>
             <span class="print:hidden">|</span>
-            <p class="print:hidden">Status: {{ currentFilters.status || 'All' }}</p>
+            <p class="print:hidden">{{ t('common.status') }}: {{ currentFilters.status || t('common.all') }}</p>
         </div>
       </div>
 
       <div class="flex items-center gap-3 print:hidden">
         <UButton
           icon="i-heroicons-printer"
-          label="Print / PDF"
+          :label="t('reports.print')"
           color="neutral"
           variant="outline"
           @click="handlePrint"
         />
         <UButton
           icon="i-heroicons-document-arrow-down"
-          label="Export Excel"
+          :label="t('reports.export_csv')"
           color="primary"
           :loading="loading"
           @click="handleExcelExport"
@@ -126,21 +127,20 @@ const handleExcelExport = () => {
         {{ error }}
     </div>
 
-    <!-- Print Footer -->
     <div class="hidden print:block mt-12 pt-8 border-t border-neutral-200">
         <div class="grid grid-cols-3 gap-8 text-center text-sm font-medium">
             <div class="space-y-12">
-                <p>Prepared by</p>
+                <p>ຜູ້ກະກຽມ / Prepared by</p>
                 <div class="h-px bg-neutral-300 w-48 mx-auto"></div>
                 <p>(................................................)</p>
             </div>
             <div class="space-y-12">
-                <p>Checked by</p>
+                <p>ຜູ້ກວດກາ / Checked by</p>
                 <div class="h-px bg-neutral-300 w-48 mx-auto"></div>
                 <p>(................................................)</p>
             </div>
             <div class="space-y-12">
-                <p>Approved by</p>
+                <p>ຜູ້ນະນຸມັດ / Approved by</p>
                 <div class="h-px bg-neutral-300 w-48 mx-auto"></div>
                 <p>(................................................)</p>
             </div>
