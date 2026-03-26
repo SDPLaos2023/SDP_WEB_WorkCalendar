@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
                 status: task.status,
                 plannedStart: task.plannedStart?.toISOString().split('T')[0] || '-',
                 plannedEnd: task.plannedEnd?.toISOString().split('T')[0] || '-',
-                completionPct: latest ? `${latest.completionPct}%` : '0%',
+                completionPct: latest ? latest.completionPct.toString() : '0',
                 latestNote: latest?.note || '-'
             }
         })

@@ -63,10 +63,15 @@ const projectColumns: TableColumn<any>[] = [
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string
+      const status = (row.getValue('status') as string)?.toLowerCase()
+      let color = 'neutral'
+      if (status === 'in_progress') color = 'primary'
+      if (status === 'completed' || status === 'done') color = 'success'
+      if (status === 'cancelled') color = 'error'
+      
       return h(UBadge, {
-        label: status.replace('_', ' '),
-        color: status === 'COMPLETED' ? 'success' : 'primary',
+        label: t(`tasks.status_${status}`),
+        color,
         variant: 'subtle'
       })
     }
@@ -178,13 +183,13 @@ const trendEndDate = computed(() => {
             <div class="space-y-4">
                 <div v-for="(count, status) in (summary?.statusBreakdown || {})" :key="status" class="space-y-1">
                     <div class="flex justify-between items-center text-xs">
-                        <span class="font-bold text-neutral-500">{{ (status as string).replace('_', ' ') }}</span>
+                        <span class="font-bold text-neutral-500">{{ t(`tasks.status_${(status as string).toLowerCase()}`) }}</span>
                         <span class="font-bold">{{ count }}</span>
                     </div>
                     <UProgress 
                         :value="count" 
                         :max="(summary?.totalTasks.project || 0) + (summary?.totalTasks.routine || 0)" 
-                        :color="status === 'DONE' ? 'success' : status === 'IN_PROGRESS' ? 'primary' : status === 'CANCELLED' ? 'error' : 'neutral'"
+                        :color="status === 'DONE' || status === 'COMPLETED' ? 'success' : status === 'IN_PROGRESS' ? 'primary' : status === 'CANCELLED' ? 'error' : 'neutral'"
                         size="sm"
                     />
                 </div>
