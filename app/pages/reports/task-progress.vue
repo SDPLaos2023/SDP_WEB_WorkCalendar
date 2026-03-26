@@ -96,7 +96,7 @@ const columns = computed<TableColumn<any>[]>(() => [
       const pct = parseInt(val) || 0
       return h('div', { class: 'flex items-center gap-2' }, [
         h(UProgress, { value: pct, class: 'w-16', size: 'sm' }),
-        h('span', { class: 'text-xs text-neutral-500' }, val + '%')
+        h('span', { class: 'text-xs text-neutral-500' }, val)
       ])
     }
   }
