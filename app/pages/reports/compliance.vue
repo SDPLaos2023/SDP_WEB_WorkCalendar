@@ -56,8 +56,8 @@ const columns = computed<TableColumn<any>[]>(() => [
     accessorKey: 'recurrence',
     header: t('tasks.frequency'),
     cell: ({ row }) => {
-      const type = row.getValue('recurrence') as string
-      return h(UBadge, { label: type, variant: 'subtle', color: 'primary', size: 'sm' })
+      const type = (row.getValue('recurrence') as string)?.toLowerCase()
+      return h(UBadge, { label: t(`tasks.freq_${type}`), variant: 'subtle', color: 'primary', size: 'sm' })
     }
   },
   {

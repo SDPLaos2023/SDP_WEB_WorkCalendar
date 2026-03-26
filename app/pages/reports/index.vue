@@ -57,7 +57,7 @@ const reports = computed(() => [
     <header>
       <div class="flex items-center gap-2 text-primary mb-2">
         <UIcon name="i-heroicons-presentation-chart-line" />
-        <span class="text-sm font-bold uppercase tracking-wider">{{ t('nav.reports') }}</span>
+        <span class="text-sm font-bold uppercase tracking-wider">{{ t('navigation.reports') }}</span>
       </div>
       <h1 class="text-3xl font-bold font-heading">{{ t('reports.hub') }}</h1>
       <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.hub_desc') }}</p>
@@ -81,7 +81,7 @@ const reports = computed(() => [
             </p>
           </div>
         </div>
-        
+
         <div class="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
           <UIcon name="i-heroicons-arrow-right" class="text-primary text-xl" />
         </div>

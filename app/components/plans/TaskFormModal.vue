@@ -221,7 +221,7 @@ function assignToMe() {
             <PlansPlannedWeeksSelector v-model="state.plannedWeeks" />
         </UFormField>
 
-        <div class="flex justify-end gap-3 pt-4">
+        <div class="sticky bottom-0 flex justify-end gap-3 pt-4 pb-4 -mx-6 -mb-6 px-6 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 z-10 transition-colors">
           <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
           <UButton type="submit" :label="isEditMode ? t('common.save') : t('common.create')" :loading="loading" color="primary" />
         </div>
