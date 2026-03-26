@@ -48,7 +48,7 @@ const columns = computed<TableColumn<any>[]>(() => [
     accessorKey: 'priority',
     header: t('common.priority'),
     cell: ({ row }) => h(UBadge, { 
-      label: row.getValue('priority'), 
+      label: t(`common.priority_${(row.getValue('priority') as string).toLowerCase()}`), 
       color: priorityColors[row.getValue('priority') as string] || 'neutral', 
       variant: 'soft' 
     })
@@ -57,7 +57,7 @@ const columns = computed<TableColumn<any>[]>(() => [
     accessorKey: 'status',
     header: t('common.status'),
     cell: ({ row }) => h(UBadge, { 
-      label: (row.getValue('status') as string).replace('_', ' '), 
+      label: t(`tasks.status_${(row.getValue('status') as string).toLowerCase()}`), 
       color: statusColors[row.getValue('status') as string] || 'neutral' 
     })
   },
@@ -155,8 +155,8 @@ const getTaskComplianceColor = (pct: number) => {
                 <UCard v-for="task in projectTasks" :key="task.id" class="hover:border-primary transition-colors cursor-pointer group" @click="navigateTo(`/tasks/${task.id}`)">
                 <div class="flex justify-between items-start">
                     <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                             <UBadge :label="task.status.replace('_', ' ')" :color="statusColors[task.status] || 'neutral'" size="sm" />
+                         <div class="flex items-center gap-2">
+                             <UBadge :label="t(`tasks.status_${task.status.toLowerCase()}`)" :color="statusColors[task.status] || 'neutral'" size="sm" />
                             <span class="text-xs text-neutral-500">{{ task.workPlan?.title }}</span>
                         </div>
                         <h3 class="font-bold text-lg group-hover:text-primary leading-tight">{{ task.taskName }}</h3>
