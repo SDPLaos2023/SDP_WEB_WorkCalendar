@@ -200,7 +200,7 @@ const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
             { label: t('common.quarter'), value: 'QUARTER' },
             { label: t('common.year'), value: 'YEAR' }
           ]"
-          :ui="{ list: { class: 'h-8 p-0.5' } }"
+          :ui="{ list: 'h-8 p-0.5' }"
         />
       </div>
 
@@ -236,7 +236,7 @@ const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
             <template v-if="getActualForDate(date)">
               <div class="rounded px-1.5 py-0.5 text-[10px] font-bold flex items-center gap-1 overflow-hidden whitespace-nowrap" :class="{'bg-success-100 text-success-700': getActualForDate(date).status === 'DONE', 'bg-warning-100 text-warning-700': getActualForDate(date).status === 'PARTIAL', 'bg-error-100 text-error-700': getActualForDate(date).status === 'NOT_DONE'}">
                 <UIcon :name="getActualForDate(date).status === 'DONE' ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'" class="w-2.5 h-2.5" />
-                <span>{{ getActualForDate(date).status.replace('_', ' ') }}</span>
+                <span>{{ t(`tasks.status_${getActualForDate(date).status.toLowerCase()}`) }}</span>
               </div>
             </template>
             <template v-else-if="isExpectedAndMissing(date)">

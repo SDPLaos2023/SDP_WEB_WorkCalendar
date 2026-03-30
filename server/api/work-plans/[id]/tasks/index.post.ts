@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
         const workPlanId = event.context.params?.id
 
         if (!workPlanId) {
-            throw createError({ statusCode: 400, statusMessage: 'Missing work plan ID' })
+            throw createError({ statusCode: 400, statusMessage: 'common.error_missing_id' })
         }
 
         // 1. Fetch Work Plan and verify access
@@ -19,20 +19,20 @@ export default defineEventHandler(async (event) => {
         })
 
         if (!workPlan) {
-            throw createError({ statusCode: 404, statusMessage: 'Work plan not found' })
+            throw createError({ statusCode: 404, statusMessage: 'common.error_not_found' })
         }
 
         if (user.role === 'SUPERVISOR') {
             const isAssigned = (workPlan as any).supervisors.some((s: any) => s.supervisorId === user.id)
             if (!isAssigned) {
-                throw createError({ statusCode: 403, statusMessage: 'Forbidden: You are not assigned to this work plan' })
+                throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
             }
         } else if (user.role === 'MANAGER' && workPlan.departmentId !== user.departmentId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only add tasks to your own department plans' })
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         } else if (user.role === 'OFFICER' && workPlan.departmentId !== user.departmentId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only add tasks to your department plans' })
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         } else if (user.role === 'ADMIN_COMPANY' && workPlan.department.companyId !== user.companyId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: Access denied to other company work plan' })
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         }
 
         // 2. Validate Body
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
         if (!result.success) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'Validation Error',
+                statusMessage: 'common.error_validation',
                 data: result.error.flatten().fieldErrors
             })
         }
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
             if (!assignedUser) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: 'Assigned user must be in the same department and have an available role'
+                    statusMessage: 'tasks.error_invalid_assignment'
                 })
             }
         }
@@ -81,8 +81,8 @@ export default defineEventHandler(async (event) => {
         }
 
         if (taskData.taskType === 'PROJECT') {
-            const start = new Date(taskData.plannedStart)
-            const end = new Date(taskData.plannedEnd)
+            const start = new Date(`${taskData.plannedStart}T00:00:00Z`)
+            const end = new Date(`${taskData.plannedEnd}T00:00:00Z`)
             const diffMs = end.getTime() - start.getTime()
             const plannedDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1)
 
@@ -93,8 +93,8 @@ export default defineEventHandler(async (event) => {
             createData.isRecurring = true
             createData.recurrenceType = taskData.recurrenceType
             createData.recurrenceDay = taskData.recurrenceDay
-            createData.recurrenceStart = new Date(taskData.recurrenceStart)
-            createData.recurrenceEnd = new Date(taskData.recurrenceEnd)
+            createData.recurrenceStart = new Date(`${taskData.recurrenceStart}T00:00:00Z`)
+            createData.recurrenceEnd = new Date(`${taskData.recurrenceEnd}T00:00:00Z`)
         }
 
         // 5. Create Task
@@ -118,6 +118,6 @@ export default defineEventHandler(async (event) => {
     } catch (error: any) {
         if (error.statusCode) throw error
         console.error('[CREATE_TASK_ERROR]:', error)
-        throw createError({ statusCode: 500, statusMessage: 'Internal server error' })
+        throw createError({ statusCode: 500, statusMessage: 'common.error_internal' })
     }
 })

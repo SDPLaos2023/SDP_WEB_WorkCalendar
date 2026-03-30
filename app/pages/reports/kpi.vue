@@ -174,8 +174,8 @@ function handleFilterChange(newFilters: any) {
                                                     <div class="flex justify-between items-start mb-3">
                                                         <div class="flex flex-col gap-1">
                                                             <div class="flex items-center gap-2">
-                                                                <UBadge :label="task.type" size="xs" color="neutral" variant="subtle" />
-                                                                <UBadge :label="task.status" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
+                                                                <UBadge :label="t('tasks.' + task.type.toLowerCase())" size="xs" color="neutral" variant="subtle" />
+                                                                <UBadge :label="t(`tasks.status_${task.status.toLowerCase()}`)" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
                                                             </div>
                                                             <span class="font-bold text-sm text-neutral-900 dark:text-white">{{ task.name }}</span>
                                                         </div>
@@ -267,8 +267,8 @@ function handleFilterChange(newFilters: any) {
                                                     <div class="flex justify-between items-start mb-3">
                                                         <div class="flex flex-col gap-1">
                                                             <div class="flex items-center gap-2">
-                                                                <UBadge :label="task.type" size="xs" color="neutral" variant="subtle" />
-                                                                <UBadge :label="task.status" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
+                                                                <UBadge :label="t('tasks.' + task.type.toLowerCase())" size="xs" color="neutral" variant="subtle" />
+                                                                <UBadge :label="t(`tasks.status_${task.status.toLowerCase()}`)" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
                                                             </div>
                                                             <span class="font-bold text-sm text-neutral-900 dark:text-white">{{ task.name }}</span>
                                                         </div>

@@ -70,7 +70,7 @@ const commonColumns = computed<TableColumn<any>[]>(() => [
     cell: ({ row }: any) => {
       const status = row.getValue('status') as string
       return h(UBadge, {
-        label: status.replace('_', ' '),
+        label: t(`tasks.status_${status.toLowerCase()}`),
         color: status === 'COMPLETED' ? 'success' : status === 'CANCELLED' ? 'error' : 'primary',
         variant: 'soft'
       })
@@ -300,7 +300,7 @@ function formatTime(dateStr: string) {
 
     <div v-if="current" class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="flex-1">
-        <UBadge :label="current.status" color="primary" variant="solid" class="mb-2" />
+        <UBadge :label="t(`plans.status_${current.status.toLowerCase()}`)" color="primary" variant="solid" class="mb-2" />
         <h1 class="text-3xl font-bold font-heading">{{ current.title }}</h1>
         <p class="text-neutral-500 font-medium whitespace-pre-wrap">
           {{ current.department?.name }} • {{ t('common.year') }} {{ current.year }}
@@ -420,7 +420,7 @@ function formatTime(dateStr: string) {
         <div v-if="selectedTask" class="p-6 space-y-8 overflow-y-auto">
             <header>
                 <div class="flex justify-between items-start mb-2">
-                  <UBadge :label="selectedTask.taskType.replace('_', ' ')" color="neutral" variant="outline" />
+                  <UBadge :label="t(`tasks.status_${selectedTask.taskType.toLowerCase()}`)" color="neutral" variant="outline" />
                   <UBadge v-if="selectedTask.taskType === 'ROUTINE'" :label="`${selectedTask.compliance?.compliancePct}% Compliance`" :color="selectedTask.compliance?.compliancePct < 100 ? 'warning' : 'success'" variant="subtle" />
                 </div>
                 <h2 class="text-2xl font-bold font-heading">{{ selectedTask.taskName }}</h2>
@@ -506,7 +506,7 @@ function formatTime(dateStr: string) {
                               >
                                 <div class="flex justify-between items-start mb-1">
                                   <span class="text-xs font-bold">{{ formatDate(log.actualDate) }}</span>
-                                  <UBadge :label="log.status.replace('_', ' ')" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : 'warning'" class="text-[10px]" />
+                                  <UBadge :label="t(`tasks.status_${log.status.toLowerCase()}`)" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : 'warning'" class="text-[10px]" />
                                 </div>
                                 <p v-if="log.note" class="text-[10px] text-neutral-500 italic">{{ log.note }}</p>
                               </div>
@@ -564,7 +564,7 @@ function formatTime(dateStr: string) {
                     </div>
 
                     <div class="flex justify-end mt-3">
-                       <UBadge :label="log.status.replace('_', ' ')" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : log.status === 'PARTIAL' ? 'warning' : 'error'" class="text-[10px] py-0" />
+                       <UBadge :label="t(`tasks.status_${log.status.toLowerCase()}`)" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : log.status === 'PARTIAL' ? 'warning' : 'error'" class="text-[10px] py-0" />
                     </div>
                   </div>
                 </div>

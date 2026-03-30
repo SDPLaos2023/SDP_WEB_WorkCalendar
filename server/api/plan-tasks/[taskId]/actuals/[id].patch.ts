@@ -13,34 +13,42 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 400, statusMessage: 'Missing parameters' })
         }
 
-        // 1. Fetch TaskActual
+        // 1. Fetch TaskActual with Task and Plan to check permissions
         const oldActual = await prisma.taskActual.findFirst({
-            where: { id, planTaskId: taskId }
+            where: { id, planTaskId: taskId },
+            include: {
+                planTask: {
+                    include: {
+                        workPlan: {
+                            include: {
+                                supervisors: true
+                            }
+                        }
+                    }
+                }
+            }
         })
 
         if (!oldActual) {
             throw createError({ statusCode: 404, statusMessage: 'Update record not found' })
         }
 
-        // 2. Authorization: Own record only
-        if (oldActual.updatedById !== user.id) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only edit your own updates' })
+        // 2. Authorization & Backdating Logic
+        const task = oldActual.planTask
+        const isAssignedPerson = task.assignedToId === user.id
+        const isSuperAdmin = user.role === 'SUPER_ADMIN'
+        const isCompanyAdmin = user.role === 'ADMIN_COMPANY' && user.companyId === task.workPlan.departmentId.split('-')[0]
+        const isManagerOfDept = user.role === 'MANAGER' && user.departmentId === task.workPlan.departmentId
+        const isSupervisorOfPlan = task.workPlan.supervisors.some(s => s.supervisorId === user.id) || task.supervisorId === user.id
+
+        const isBoss = isSuperAdmin || isCompanyAdmin || isManagerOfDept || isSupervisorOfPlan
+
+        // Basic permission check: Owner or Boss
+        if (oldActual.updatedById !== user.id && !isBoss) {
+            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You do not have permission to edit this update' })
         }
 
-        // 3. Date Constraint: Same day only
-        const createdAt = new Date(oldActual.createdAt)
-        const today = new Date()
-
-        const isSameDay =
-            createdAt.getFullYear() === today.getFullYear() &&
-            createdAt.getMonth() === today.getMonth() &&
-            createdAt.getDate() === today.getDate()
-
-        if (!isSameDay) {
-            throw createError({ statusCode: 403, statusMessage: "Forbidden: Can only edit today's update" })
-        }
-
-        // 4. Validate Body
+        // 3. Validate Body
         const body = await readBody(event)
         const result = updateActualSchema.safeParse(body)
         if (!result.success) {
@@ -53,10 +61,29 @@ export default defineEventHandler(async (event) => {
 
         const updates: any = { ...result.data }
 
-        // Convert dates if present
-        if (updates.actualDate) updates.actualDate = new Date(updates.actualDate)
-        if (updates.actualStart) updates.actualStart = new Date(updates.actualStart)
-        if (updates.actualEnd) updates.actualEnd = new Date(updates.actualEnd)
+        // 4. Date Formatting & Hierarchy Restriction
+        const todayStr = new Date().toLocaleDateString('en-CA') 
+        const todayAddress = new Date(`${todayStr}T00:00:00Z`)
+
+        if (updates.actualDate) {
+            // Force UTC midnight for SQL Server DATE column
+            const newDate = new Date(`${updates.actualDate}T00:00:00Z`)
+            const isBackdated = newDate < todayAddress
+            const isFuture = newDate > todayAddress
+
+            // No future updates
+            if (isFuture) throw createError({ statusCode: 400, statusMessage: 'tasks.error_future_date' })
+
+            // Only boss can backdate (or edit backdated records that aren't theirs)
+            if (isBackdated && !isBoss) {
+                throw createError({ statusCode: 403, statusMessage: 'tasks.error_backdate_forbidden' })
+            }
+
+            updates.actualDate = newDate
+        }
+
+        if (updates.actualStart) updates.actualStart = new Date(`${updates.actualStart}T00:00:00Z`)
+        if (updates.actualEnd) updates.actualEnd = new Date(`${updates.actualEnd}T00:00:00Z`)
 
         // 5. Update Actual
         const updatedActual = await prisma.taskActual.update({

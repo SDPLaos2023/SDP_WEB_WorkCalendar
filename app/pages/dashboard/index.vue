@@ -49,11 +49,11 @@ const kpis = computed(() => [
 const projectColumns: TableColumn<any>[] = [
   {
     accessorKey: 'taskName',
-    header: 'Task Name'
+    header: t('tasks.name')
   },
   {
     accessorKey: 'assignedTo',
-    header: 'Assigned To',
+    header: t('tasks.assign_to'),
     cell: ({ row }) => {
       const user = row.getValue('assignedTo') as any
       return `${user.firstName} ${user.lastName}`
@@ -61,7 +61,7 @@ const projectColumns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }) => {
       const status = (row.getValue('status') as string)?.toLowerCase()
       let color = 'neutral'
@@ -78,7 +78,7 @@ const projectColumns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'latestActual',
-    header: 'Progress',
+    header: t('tasks.completion'),
     cell: ({ row }) => {
       const latest = row.getValue('latestActual') as any
       const pct = latest?.completionPct || 0
@@ -93,11 +93,11 @@ const projectColumns: TableColumn<any>[] = [
 const complianceColumns: TableColumn<any>[] = [
   {
     accessorKey: 'taskName',
-    header: 'Routine Task'
+    header: t('tasks.routine')
   },
   {
     accessorKey: 'compliancePct',
-    header: 'Compliance',
+    header: t('tasks.compliance'),
     cell: ({ row }) => {
       const pct = row.getValue('compliancePct') as number
       const color = pct > 80 ? 'success' : pct > 50 ? 'warning' : 'error'
@@ -106,7 +106,7 @@ const complianceColumns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'missedDates',
-    header: 'Missed Periods',
+    header: t('tasks.missed_label'),
     cell: ({ row }) => {
       const dates = row.getValue('missedDates') as string[]
       if (!dates || dates.length === 0) {
