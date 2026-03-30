@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
         } else if (user.role === 'OFFICER' && workPlan.departmentId !== user.departmentId) {
             throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         } else if (user.role === 'ADMIN_COMPANY' && workPlan.department.companyId !== user.companyId) {
-            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
+            throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
         }
 
         // 2. Validate Body
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
         if (!result.success) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'common.error_validation',
+                statusMessage: 'Validation Error',
                 data: result.error.flatten().fieldErrors
             })
         }
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
             if (!assignedUser) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: 'tasks.error_invalid_assignment'
+                    statusMessage: 'Assigned user must be in the same department and have an available role'
                 })
             }
         }

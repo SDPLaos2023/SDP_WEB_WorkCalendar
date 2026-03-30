@@ -41,6 +41,10 @@ vi.mock('../../../server/utils/audit', () => ({
     logAudit: vi.fn()
 }))
 
+vi.mock('../../../server/utils/materialized-stats', () => ({
+    updateTaskMaterializedStats: vi.fn()
+}))
+
 describe('Task and Actual API Handlers', () => {
     const mockEvent = () => ({
         context: { params: {} },
@@ -122,11 +126,21 @@ describe('Task and Actual API Handlers', () => {
             const { getUser } = await import('../../../server/utils/auth-helpers')
             vi.mocked(getUser).mockReturnValue(sessionUser as any)
 
-            const task = { id: 't-1', assignedToId: 'o-1', taskType: 'PROJECT' }
+            const task = { 
+                id: 't-1', 
+                assignedToId: 'o-1', 
+                taskType: 'PROJECT', 
+                status: 'PENDING',
+                workPlan: { 
+                    departmentId: 'd-1',
+                    supervisors: [] 
+                } 
+            }
             vi.mocked(prisma.planTask.findFirst).mockResolvedValue(task as any)
 
+            const todayStr = new Date().toLocaleDateString('en-CA')
             const actualData = {
-                actualDate: '2024-01-01',
+                actualDate: todayStr,
                 updateType: 'DAILY',
                 completionPct: 50,
                 status: 'PARTIAL'
@@ -147,11 +161,21 @@ describe('Task and Actual API Handlers', () => {
             const { getUser } = await import('../../../server/utils/auth-helpers')
             vi.mocked(getUser).mockReturnValue(sessionUser as any)
 
-            const task = { id: 't-1', assignedToId: 'o-1', taskType: 'ROUTINE' }
+            const task = { 
+                id: 't-1', 
+                assignedToId: 'o-1', 
+                taskType: 'ROUTINE', 
+                status: 'PENDING',
+                workPlan: { 
+                    departmentId: 'd-1',
+                    supervisors: [] 
+                } 
+            }
             vi.mocked(prisma.planTask.findFirst).mockResolvedValue(task as any)
 
+            const todayStr = new Date().toLocaleDateString('en-CA')
             const actualData = {
-                actualDate: '2024-01-01',
+                actualDate: todayStr,
                 updateType: 'DAILY',
                 completionPct: 100,
                 status: 'DONE'
