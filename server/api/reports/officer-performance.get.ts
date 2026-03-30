@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
             })
             const avgCompliancePct = routines.length > 0 ? (totalCompliancePct / routines.length) : 0
 
-            const pendingTasks = tasks.filter(t => t.status !== 'DONE' && t.status !== 'COMPLETED').length
+            const pendingTasks = tasks.filter(t => t.status !== 'DONE').length
 
             return {
                 officerName: `${officer.firstName} ${officer.lastName}`,

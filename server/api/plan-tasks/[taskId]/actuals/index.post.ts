@@ -104,7 +104,7 @@ export default defineEventHandler(async (event) => {
             if (existing) {
                 throw createError({
                     statusCode: 409,
-                    statusMessage: 'tasks.error_duplicate_actual'
+                    statusMessage: 'Already updated for this period'
                 })
             }
         }
@@ -132,7 +132,7 @@ export default defineEventHandler(async (event) => {
             if (actualData.completionPct === 100) {
                 await tx.planTask.update({
                     where: { id: taskId },
-                    data: { status: 'COMPLETED' } // Assuming COMPLETED from shared schemas/DB logic
+                    data: { status: 'DONE' } // Matches AGENTS.md requirements
                 })
             } else if (task.status === 'PENDING') {
                  // Any update shifts it from pending
