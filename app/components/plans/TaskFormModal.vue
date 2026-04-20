@@ -38,14 +38,18 @@ const officers = ref<any[]>([])
 async function fetchOfficers() {
   loadingUsers.value = true
   try {
-    const res = await apiFetch<any>('/api/users?role=OFFICER&limit=100')
+    const plan = useWorkPlan().current.value
+    if (!plan?.departmentId) return
+
+    const res = await apiFetch<any>(`/api/users?departmentId=${plan.departmentId}&limit=200`)
     if (res.success) {
-      const fetched = res.data.filter((u: any) => u.isActive && u.role === 'OFFICER').map((u: any) => ({
+      const allowedRoles = ['MANAGER', 'SUPERVISOR', 'OFFICER']
+      const fetched = res.data.filter((u: any) => u.isActive && allowedRoles.includes(u.role)).map((u: any) => ({
          ...u,
-         fullName: `${u.firstName} ${u.lastName}`
+         fullName: `${u.firstName} ${u.lastName} (${u.role})`
       }))
 
-      if (user.value) {
+      if (user.value && allowedRoles.includes(user.value.role) && user.value.departmentId === plan.departmentId) {
         const meIndex = fetched.findIndex((u: any) => u.id === user.value?.id)
         if (meIndex >= 0) {
           fetched[meIndex].fullName += ' (Me)'
