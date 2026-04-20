@@ -74,6 +74,13 @@ const availableSupervisors = computed(() => {
   return users.value.filter(u => u.role === 'SUPERVISOR')
 })
 
+const availableOfficers = computed(() => {
+  return users.value.filter(u => 
+    u.departmentId === planState.departmentId && 
+    ['MANAGER', 'SUPERVISOR', 'OFFICER'].includes(u.role)
+  )
+})
+
 onMounted(() => {
   fetchDepartments()
   fetchUsers()
@@ -96,9 +103,29 @@ const currentTask = reactive({
   isRecurring: true
 })
 
+function sanitizeTaskForApi(raw: typeof currentTask) {
+  const base: Record<string, any> = {
+    taskName: raw.taskName,
+    taskType: raw.taskType,
+    priority: raw.priority,
+    assignedToId: raw.assignedToId || null,
+  }
+
+  if (raw.taskType === 'PROJECT') {
+    base.plannedStart = raw.plannedStart
+    base.plannedEnd = raw.plannedEnd
+  } else {
+    base.recurrenceType = raw.recurrenceType
+    base.recurrenceStart = raw.recurrenceStart
+    base.recurrenceEnd = raw.recurrenceEnd
+  }
+
+  return base
+}
+
 function addTask() {
-  tasks.value.push({ ...currentTask })
-  // Reset task form (simplified)
+  tasks.value.push(sanitizeTaskForApi(currentTask))
+  // Reset task form
   currentTask.taskName = ''
 }
 
@@ -107,17 +134,45 @@ function removeTask(index: number) {
 }
 
 async function submitAll() {
+  let createdPlanId: string | null = null
   try {
     const plan = await createPlan(planState as any)
-    if (plan && plan.id) {
-       for (const task of tasks.value) {
-         await createTask(plan.id, task)
-       }
+    if (!plan?.id) {
+      toast.add({ title: 'Failed to create plan', color: 'error' })
+      return
     }
-    toast.add({ title: 'Plan and Tasks created!', color: 'success' })
-    navigateTo('/plans')
+    createdPlanId = plan.id
+
+    // Create tasks sequentially
+    const failedTasks: string[] = []
+    for (const task of tasks.value) {
+      try {
+        await createTask(plan.id, task)
+      } catch (taskErr: any) {
+        failedTasks.push(task.taskName || 'Unknown task')
+        console.error('[CREATE_TASK_ERROR]:', taskErr)
+      }
+    }
+
+    if (failedTasks.length > 0) {
+      toast.add({
+        title: `Plan created but ${failedTasks.length} task(s) failed`,
+        description: `Failed: ${failedTasks.join(', ')}. You can add them from the plan page.`,
+        color: 'warning'
+      })
+      navigateTo(`/plans/${plan.id}`)
+    } else {
+      toast.add({ title: 'Plan and Tasks created!', color: 'success' })
+      navigateTo('/plans')
+    }
   } catch (err: any) {
-    toast.add({ title: 'Failed to create plan', description: err.data?.statusMessage, color: 'error' })
+    if (createdPlanId) {
+      // Plan was created but something else failed — navigate to plan
+      toast.add({ title: 'Plan created, but an error occurred', description: err.data?.statusMessage, color: 'warning' })
+      navigateTo(`/plans/${createdPlanId}`)
+    } else {
+      toast.add({ title: 'Failed to create plan', description: err.data?.statusMessage, color: 'error' })
+    }
   }
 }
 </script>
@@ -208,7 +263,7 @@ async function submitAll() {
             <UFormField label="Assigned Officer" class="md:col-span-2">
               <USelectMenu
                 v-model="currentTask.assignedToId"
-                :items="users"
+                :items="availableOfficers"
                 label-key="fullName"
                 value-key="id"
                 placeholder="Unassigned (Supervisor will assign later)"
@@ -260,7 +315,7 @@ async function submitAll() {
               <p class="font-medium">{{ t.taskName }}</p>
               <p class="text-xs text-neutral-500">
                 Type: {{ t.taskType }} •
-                Assigned: {{ users.find(u => u.id === t.assignedToId)?.fullName || t.assignedToId }} •
+                Assigned: {{ users.find(u => u.id === t.assignedToId)?.fullName || 'Not assigned' }} •
                 Priority: {{ t.priority }}
               </p>
             </div>
@@ -311,7 +366,7 @@ async function submitAll() {
                 id: 'assignedTo',
                 header: 'Assigned Officer',
                 cell: ({ row }) => {
-                  const u = users.value.find(u => u.id === row.original.assignedToId)
+                  const u = users.find(u => u.id === row.original.assignedToId)
                   return u ? u.fullName : h('span', { class: 'text-neutral-400 italic' }, 'Not assigned')
                 }
               },

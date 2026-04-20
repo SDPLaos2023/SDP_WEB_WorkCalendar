@@ -116,7 +116,7 @@ function openCalendar(task: any) {
 function handleDateSelectInCalendar(date: string) {
   // 1. Backdating check - Force local time to prevent offset issues
   const selectedDateObj = new Date(`${date}T00:00:00`)
-  
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
