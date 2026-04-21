@@ -190,7 +190,7 @@ function assignToMe() {
           </div>
         </UFormField>
 
-        <UFormField :label="t('tasks.type')" name="taskType" v-if="!isEditMode">
+        <UFormField :label="t('tasks.type')" name="taskType">
           <USelect v-model="state.taskType" :items="['PROJECT', 'ROUTINE']" class="w-full" />
         </UFormField>
 
