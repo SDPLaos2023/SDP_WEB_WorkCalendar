@@ -5,11 +5,11 @@ import { updatePlanTaskSchema } from '../../../../../shared/schemas/plan-task.sc
 
 export default defineEventHandler(async (event) => {
     try {
-        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR'])
+        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR', 'OFFICER'])
         const taskId = event.context.params?.taskId
 
         if (!taskId) {
-            throw createError({ statusCode: 400, statusMessage: 'Missing task ID' })
+            throw createError({ statusCode: 400, statusMessage: 'common.error_missing_id' })
         }
 
         // 1. Fetch Old Task
@@ -19,19 +19,21 @@ export default defineEventHandler(async (event) => {
         })
 
         if (!oldTask) {
-            throw createError({ statusCode: 404, statusMessage: 'Task not found' })
+            throw createError({ statusCode: 404, statusMessage: 'common.error_not_found' })
         }
 
         // 2. Authorization
         if (user.role === 'SUPERVISOR') {
             const isAssigned = (oldTask.workPlan as any).supervisors.some((s: any) => s.supervisorId === user.id)
             if (!isAssigned) {
-                throw createError({ statusCode: 403, statusMessage: 'Forbidden: You are not assigned to this work plan' })
+                throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
             }
         } else if (user.role === 'MANAGER' && oldTask.workPlan.departmentId !== user.departmentId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only edit tasks for your own department' })
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
+        } else if (user.role === 'OFFICER' && oldTask.workPlan.departmentId !== user.departmentId) {
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         } else if (user.role === 'ADMIN_COMPANY' && oldTask.workPlan.department.companyId !== user.companyId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: Access denied to other company task' })
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         }
 
         // 3. Validate Body
@@ -40,7 +42,7 @@ export default defineEventHandler(async (event) => {
         if (!result.success) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'Validation Error',
+                statusMessage: 'common.error_validation',
                 data: result.error.flatten().fieldErrors
             })
         }
@@ -49,21 +51,22 @@ export default defineEventHandler(async (event) => {
 
         // 4. Handle PROJECT specific logic (plannedDays)
         if (oldTask.taskType === 'PROJECT') {
-            const start = updates.plannedStart ? new Date(updates.plannedStart) : oldTask.plannedStart
-            const end = updates.plannedEnd ? new Date(updates.plannedEnd) : oldTask.plannedEnd
+            const startStr = updates.plannedStart || (oldTask.plannedStart instanceof Date ? oldTask.plannedStart.toISOString().split('T')[0] : oldTask.plannedStart)
+            const endStr = updates.plannedEnd || (oldTask.plannedEnd instanceof Date ? oldTask.plannedEnd.toISOString().split('T')[0] : oldTask.plannedEnd)
 
-            if (updates.plannedStart || updates.plannedEnd) {
-                if (start && end) {
-                    const diffMs = end.getTime() - start.getTime()
-                    updates.plannedDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1)
-                }
-                if (updates.plannedStart) updates.plannedStart = start
-                if (updates.plannedEnd) updates.plannedEnd = end
+            const start = startStr ? new Date(`${startStr}T00:00:00Z`) : null
+            const end = endStr ? new Date(`${endStr}T00:00:00Z`) : null
+
+            if (start && end) {
+                const diffMs = end.getTime() - start.getTime()
+                updates.plannedDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1)
+                updates.plannedStart = start
+                updates.plannedEnd = end
             }
         } else {
             // For ROUTINE
-            if (updates.recurrenceStart) updates.recurrenceStart = new Date(updates.recurrenceStart)
-            if (updates.recurrenceEnd) updates.recurrenceEnd = new Date(updates.recurrenceEnd)
+            if (updates.recurrenceStart) updates.recurrenceStart = new Date(`${updates.recurrenceStart}T00:00:00Z`)
+            if (updates.recurrenceEnd) updates.recurrenceEnd = new Date(`${updates.recurrenceEnd}T00:00:00Z`)
         }
 
         // 5. Update Task
@@ -89,6 +92,6 @@ export default defineEventHandler(async (event) => {
     } catch (error: any) {
         if (error.statusCode) throw error
         console.error('[UPDATE_TASK_ERROR]:', error)
-        throw createError({ statusCode: 500, statusMessage: 'Internal server error' })
+        throw createError({ statusCode: 500, statusMessage: 'common.error_internal' })
     }
 })

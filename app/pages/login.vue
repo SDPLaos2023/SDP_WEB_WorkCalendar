@@ -6,6 +6,7 @@ definePageMeta({
   layout: 'auth'
 })
 
+const { t, locale, setLocale } = useI18n()
 const { login, loading, error } = useAuth()
 const toast = useToast()
 
@@ -20,14 +21,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   try {
     await login(state.username, state.password)
     toast.add({
-      title: 'Login Successful',
+      title: t('auth.welcome'),
       description: 'System connection established. Routing to dashboard...',
       color: 'success'
     })
     navigateTo('/dashboard')
   } catch (err: any) {
     toast.add({
-      title: 'Access Denied',
+      title: t('auth.failed'),
       description: err.data?.statusMessage || 'Invalid credentials or expired session.',
       color: 'error'
     })
@@ -44,12 +45,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
           <div class="flex justify-between items-center px-1">
             <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <UIcon name="i-heroicons-identification" class="w-4 h-4 text-orange-500" />
-              Corporate Identity
+              {{ t('auth.username') }}
             </label>
           </div>
           <UInput
             v-model="state.username"
-            placeholder="Username"
+            :placeholder="t('auth.username')"
             size="xl"
             variant="none"
             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-500/10 transition-all text-slate-900 dark:text-white px-2 font-semibold"
@@ -64,10 +65,10 @@ async function onSubmit(event: FormSubmitEvent<any>) {
           <div class="flex justify-between items-center px-1">
             <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 text-orange-500" />
-              Access Credentials
+              {{ t('auth.access_credentials') }}
             </label>
             <button type="button" class="text-[10px] font-bold text-orange-500 hover:text-orange-600 transition-colors uppercase tracking-widest">
-              Recovery?
+              {{ t('auth.recovery') }}?
             </button>
           </div>
           <UInput
@@ -97,7 +98,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       <div v-if="error" class="p-4 bg-red-500/10 dark:bg-red-500/5 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold animate-shake flex items-start gap-3">
         <UIcon name="i-heroicons-shield-exclamation" class="w-5 h-5 flex-shrink-0" />
         <div class="space-y-1">
-          <p class="uppercase tracking-widest text-[10px]">Security Incident</p>
+          <p class="uppercase tracking-widest text-[10px]">Error</p>
           <span class="font-medium opacity-80 leading-relaxed">{{ error }}</span>
         </div>
       </div>
@@ -109,7 +110,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         :loading="loading"
         class="bg-orange-600 hover:bg-orange-500 text-white font-black uppercase tracking-[0.25em] py-7 shadow-xl shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer rounded-xl group"
       >
-        Authorize & Enter
+        {{ t('auth.login') }}
         <template #trailing>
           <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </template>

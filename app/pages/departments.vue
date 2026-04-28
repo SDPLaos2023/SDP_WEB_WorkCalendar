@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import type { TableColumn } from '@nuxt/ui'
 import type { RowSelectionState } from '@tanstack/table-core'
 
@@ -28,18 +29,18 @@ const columns = computed(() => {
       })
     },
     { accessorKey: 'code', header: 'Code' },
-    { accessorKey: 'name', header: 'Name' }
+    { accessorKey: 'name', header: t('common.name') }
   ]
 
   if (role.value === 'SUPER_ADMIN') {
     cols.push({
       accessorKey: 'company.name',
-      header: 'Company',
+      header: t('management.company'),
       cell: ({ row }) => row.original.company?.name || '-'
     })
   }
 
-  cols.push({ accessorKey: 'createdAt', header: 'Created At', cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString() })
+  cols.push({ accessorKey: 'createdAt', header: t('common.date'), cell: ({ row }) => formatDate(row.getValue('createdAt')) })
   cols.push({ id: 'actions', header: '' })
 
   return cols
@@ -76,7 +77,7 @@ async function fetchCompanies() {
   try {
     const res = await apiFetch<any>('/api/companies?limit=100')
     if (res.success) {
-      companies.value = [{ id: 'all', name: 'All Companies' }, ...res.data]
+      companies.value = [{ id: 'all', name: t('common.all') }, ...res.data]
     }
   } catch (err) {
     console.error('Failed to fetch companies', err)
@@ -168,8 +169,8 @@ async function onConfirmDelete() {
 
 function getRowItems(dept: any) {
   return [[
-    { label: 'Edit', icon: 'i-heroicons-pencil-square', onSelect: () => openEdit(dept) },
-    { label: 'Delete', icon: 'i-heroicons-trash', onSelect: () => startDelete(dept) }
+    { label: t('common.edit'), icon: 'i-heroicons-pencil-square', onSelect: () => openEdit(dept) },
+    { label: t('common.delete'), icon: 'i-heroicons-trash', onSelect: () => startDelete(dept) }
   ]]
 }
 </script>
@@ -178,15 +179,15 @@ function getRowItems(dept: any) {
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold font-heading">Master Data: Departments</h1>
-        <p class="text-gray-500">Manage organizational departments</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('management.department') }}</h1>
+        <p class="text-gray-500">{{ t('management.departments_subtitle') }}</p>
       </div>
     </div>
 
     <UCard>
       <div class="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div class="flex flex-col md:flex-row gap-4 flex-1 w-full md:w-auto">
-          <UInput v-model="search" icon="i-heroicons-magnifying-glass" placeholder="Search departments..." class="w-full md:w-64" />
+          <UInput v-model="search" icon="i-heroicons-magnifying-glass" :placeholder="t('common.search')" class="w-full md:w-64" />
 
           <USelect
             v-if="role === 'SUPER_ADMIN'"
@@ -200,8 +201,8 @@ function getRowItems(dept: any) {
         </div>
 
         <div class="flex gap-2 w-full md:w-auto justify-end">
-          <UButton v-if="selection.length > 0" label="Delete Selected" icon="i-heroicons-trash" color="error" variant="soft" @click="startBulkDelete" />
-          <UButton label="Add Department" icon="i-heroicons-plus" @click="openCreate" />
+          <UButton v-if="selection.length > 0" :label="t('common.delete')" icon="i-heroicons-trash" color="error" variant="soft" @click="startBulkDelete" />
+          <UButton :label="t('common.create')" icon="i-heroicons-plus" @click="openCreate" />
         </div>
       </div>
 
@@ -223,8 +224,8 @@ function getRowItems(dept: any) {
 
       <div class="flex items-center justify-between mt-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-500">Total: {{ totalDepartments }} departments</span>
-          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }} selected)</span>
+          <span class="text-sm text-gray-500">{{ t('common.all') }}: {{ totalDepartments }}</span>
+          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }})</span>
         </div>
         <UPagination v-model:page="page" :total="totalDepartments" :items-per-page="pageSize" />
       </div>
@@ -234,10 +235,10 @@ function getRowItems(dept: any) {
 
     <ConfirmModal
       v-model:open="isConfirmOpen"
-      :title="isBulkDelete ? 'Bulk Delete Departments' : 'Delete Department'"
+      :title="t('common.delete')"
       :description="isBulkDelete
-        ? `ກະລຸນາຢືນຢັນການລົບ ${selection.length} ພະແນກທີ່ເລືອກ?`
-        : `ກະລຸນາຢືນຢັນການລົບ ${confirmTarget?.name}?`"
+        ? t('plans.confirm_delete')
+        : t('plans.confirm_delete')"
       :loading="deleting"
       @confirm="onConfirmDelete"
       @close="isConfirmOpen = false"

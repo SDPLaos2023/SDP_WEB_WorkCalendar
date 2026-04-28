@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import auth from '~/middleware/auth'
@@ -10,10 +11,10 @@ definePageMeta({
 const { fetchReport, loading, error } = useReport()
 
 const activeTabIndex = ref(0)
-const tabs = [
-  { label: 'Officers KPI', slot: 'OFFICER', icon: 'i-heroicons-user' },
-  { label: 'Supervisors KPI', slot: 'SUPERVISOR', icon: 'i-heroicons-user-group' }
-]
+const tabs = computed(() => [
+  { label: t('reports.officer_performance'), slot: 'OFFICER', icon: 'i-heroicons-user' },
+  { label: t('reports.officer_performance_desc'), slot: 'SUPERVISOR', icon: 'i-heroicons-user-group' } // just a fallback for supervisor kpi string
+])
 
 const filters = reactive({
   year: new Date().getFullYear(),
@@ -26,7 +27,7 @@ const reportData = ref<any[]>([])
 const fetchData = async () => {
     loading.value = true
     try {
-        const type = tabs[activeTabIndex.value]?.slot || 'OFFICER'
+        const type = tabs.value[activeTabIndex.value]?.slot || 'OFFICER'
         const result = await fetchReport('/api/reports/kpi', {
             year: filters.year,
             departmentId: filters.departmentId,
@@ -65,7 +66,7 @@ function toggleRow(id: string) {
 }
 
 const columns = computed(() => {
-    const currentTab = tabs[activeTabIndex.value]?.slot || 'OFFICER'
+    const currentTab = tabs.value[activeTabIndex.value]?.slot || 'OFFICER'
     const expandCol = { id: 'expand', header: '' }
 
     if (currentTab === 'SUPERVISOR') {
@@ -103,10 +104,10 @@ function handleFilterChange(newFilters: any) {
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
-        <h1 class="text-3xl font-bold font-heading">KPI Achievement Report</h1>
-        <p class="text-neutral-500 font-medium">Performance measurements based on planned tasks vs actual completions.</p>
+        <h1 class="text-3xl font-bold font-heading">{{ t('reports.kpi') }}</h1>
+        <p class="text-neutral-500 font-medium">{{ t('reports.kpi_desc') }}</p>
       </div>
 
       <ExportButtons show-print :loading="loading" />
@@ -123,10 +124,10 @@ function handleFilterChange(newFilters: any) {
                         <thead class="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
                             <tr>
                                 <th class="w-12 p-4"></th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Name</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Department</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Tasks</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">KPI Performance</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('common.name') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('management.department') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('tasks.title') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('reports.kpi') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
@@ -166,15 +167,15 @@ function handleFilterChange(newFilters: any) {
                                         <div class="p-6 border-l-4 border-primary ml-12 mb-4 mt-2">
                                             <h4 class="text-sm font-bold mb-4 flex items-center gap-2 text-neutral-800 dark:text-neutral-200">
                                                 <UIcon name="i-heroicons-clipboard-document-list" class="text-primary" />
-                                                Task Breakdown for {{ item.name }}
+                                                {{ t('tasks.name') }} ({{ item.name }})
                                             </h4>
                                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                                 <div v-for="task in item.tasks" :key="task.id" class="p-4 bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow">
                                                     <div class="flex justify-between items-start mb-3">
                                                         <div class="flex flex-col gap-1">
                                                             <div class="flex items-center gap-2">
-                                                                <UBadge :label="task.type" size="xs" color="neutral" variant="subtle" />
-                                                                <UBadge :label="task.status" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
+                                                                <UBadge :label="t('tasks.' + task.type.toLowerCase())" size="xs" color="neutral" variant="subtle" />
+                                                                <UBadge :label="t(`tasks.status_${task.status.toLowerCase()}`)" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
                                                             </div>
                                                             <span class="font-bold text-sm text-neutral-900 dark:text-white">{{ task.name }}</span>
                                                         </div>
@@ -197,7 +198,7 @@ function handleFilterChange(newFilters: any) {
                             <tr v-if="reportData.length === 0 && !loading">
                                 <td colspan="5" class="p-12 text-center text-neutral-400">
                                     <UIcon name="i-heroicons-document-magnifying-glass" class="text-4xl mb-2 mx-auto" />
-                                    <p>No results found for current filters</p>
+                                    <p>{{ t('common.none') }}</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -214,11 +215,11 @@ function handleFilterChange(newFilters: any) {
                         <thead class="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
                             <tr>
                                 <th class="w-12 p-4"></th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Supervisor</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Department</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Plans</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Tasks</th>
-                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Overall KPI</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('common.name') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('management.department') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('plans.title') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('tasks.title') }}</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-neutral-500">{{ t('reports.kpi') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
@@ -259,15 +260,15 @@ function handleFilterChange(newFilters: any) {
                                         <div class="p-6 border-l-4 border-primary ml-12 mb-4 mt-2">
                                             <h4 class="text-sm font-bold mb-4 flex items-center gap-2 text-neutral-800 dark:text-neutral-200">
                                                 <UIcon name="i-heroicons-clipboard-document-list" class="text-primary" />
-                                                Task Breakdown for Supervisor: {{ item.name }}
+                                                {{ t('tasks.name') }} ({{ item.name }})
                                             </h4>
                                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                                 <div v-for="task in item.tasks" :key="task.id" class="p-4 bg-white dark:bg-gray-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow">
                                                     <div class="flex justify-between items-start mb-3">
                                                         <div class="flex flex-col gap-1">
                                                             <div class="flex items-center gap-2">
-                                                                <UBadge :label="task.type" size="xs" color="neutral" variant="subtle" />
-                                                                <UBadge :label="task.status" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
+                                                                <UBadge :label="t('tasks.' + task.type.toLowerCase())" size="xs" color="neutral" variant="subtle" />
+                                                                <UBadge :label="t(`tasks.status_${task.status.toLowerCase()}`)" size="xs" :color="task.status === 'DONE' ? 'success' : 'neutral'" variant="soft" />
                                                             </div>
                                                             <span class="font-bold text-sm text-neutral-900 dark:text-white">{{ task.name }}</span>
                                                         </div>
@@ -290,7 +291,7 @@ function handleFilterChange(newFilters: any) {
                             <tr v-if="reportData.length === 0 && !loading">
                                 <td colspan="6" class="p-12 text-center text-neutral-400">
                                     <UIcon name="i-heroicons-document-magnifying-glass" class="text-4xl mb-2 mx-auto" />
-                                    <p>No results found for current filters</p>
+                                    <p>{{ t('common.none') }}</p>
                                 </td>
                             </tr>
                         </tbody>

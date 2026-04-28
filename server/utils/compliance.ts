@@ -32,15 +32,19 @@ export function calculateCompliance(
     // Bound the calculation up to today
     const limitDate = today < endDate ? today : endDate
 
+    const isMonthlyPlus = ['MONTHLY', 'QUARTERLY', 'YEARLY'].includes(task.recurrenceType!)
+
     const actualDateStrings = new Set(actuals.map(a => {
         const d = new Date(a.actualDate)
         d.setHours(0, 0, 0, 0)
+        if (isMonthlyPlus) d.setDate(1)
         return d.toISOString()
     }))
 
     const missedDates: string[] = []
     let expectedPeriods = 0
     let current = new Date(startDate)
+    if (isMonthlyPlus) current.setDate(1)
 
     while (current <= limitDate) {
         expectedPeriods++
@@ -62,7 +66,7 @@ export function calculateCompliance(
         } else if (task.recurrenceType === 'YEARLY') {
             current.setFullYear(current.getFullYear() + 1)
         } else {
-            break; // Should not happen
+            break;
         }
     }
 

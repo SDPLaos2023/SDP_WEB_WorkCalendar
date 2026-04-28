@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 
@@ -149,11 +150,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       body
     })
 
-    useToast().add({ title: 'Success', description: `User saved successfully`, color: 'success' })
+    useToast().add({ title: t('common.success'), description: `User saved successfully`, color: 'success' })
     emit('success')
     open.value = false
   } catch (err: any) {
-    useToast().add({ title: 'Error', description: err.data?.statusMessage || err.message, color: 'error' })
+    useToast().add({ title: t('common.error'), description: err.data?.statusMessage || err.message, color: 'error' })
   } finally {
     loading.value = false
   }
@@ -161,17 +162,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="user ? 'Edit User' : 'Create User'" :description="user ? `Editing ${user.firstName} ${user.lastName}` : 'Add a new user to the system'">
+  <UModal v-model:open="open" :title="user ? t('common.edit') : t('common.create')" :description="user ? `Editing ${user.firstName} ${user.lastName}` : 'Add a new user to the system'">
     <template #content>
       <UForm :schema="baseSchema" :state="state" class="p-6 space-y-4" @submit="onSubmit">
-        <h3 class="text-lg font-semibold mb-4">{{ user ? 'Edit User' : 'Create User' }}</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ user ? t('common.edit') : t('common.create') }}</h3>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="First Name" name="firstName">
+          <UFormField :label="t('common.name')" name="firstName">
             <UInput v-model="state.firstName" class="w-full" placeholder="First Name" />
           </UFormField>
 
-          <UFormField label="Last Name" name="lastName">
+          <UFormField :label="t('common.name') + ' (Last)'" name="lastName">
             <UInput v-model="state.lastName" class="w-full" placeholder="Last Name" />
           </UFormField>
         </div>
@@ -206,7 +207,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UInput>
         </UFormField>
 
-        <UFormField label="Role" name="role">
+        <UFormField :label="t('management.role')" name="role">
           <USelect
             v-model="state.role"
             :items="[
@@ -219,7 +220,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           />
         </UFormField>
 
-        <UFormField v-if="isSuperAdmin" label="Company" name="companyId">
+        <UFormField v-if="isSuperAdmin" :label="t('management.company')" name="companyId">
           <USelect
             v-model="state.companyId"
             :items="companies"
@@ -230,7 +231,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           />
         </UFormField>
 
-        <UFormField label="Department (Optional)" name="departmentId">
+        <UFormField :label="t('management.department') + ' (Optional)'" name="departmentId">
           <USelect
             v-model="state.departmentId"
             :items="departments"
@@ -242,13 +243,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           />
         </UFormField>
 
-        <UFormField label="Active Status" name="isActive">
+        <UFormField :label="t('common.status')" name="isActive">
           <UCheckbox v-model="state.isActive" label="User operates in the system" />
         </UFormField>
 
         <div class="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false; $emit('close')" />
-          <UButton type="submit" :label="user ? 'Update User' : 'Save User'" :loading="loading" />
+          <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false; $emit('close')" />
+          <UButton type="submit" :label="user ? t('common.save') : t('common.create')" :loading="loading" />
         </div>
       </UForm>
     </template>

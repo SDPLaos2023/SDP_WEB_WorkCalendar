@@ -1,5 +1,6 @@
 import type { CreateWorkPlanInput, UpdateWorkPlanInput } from '~~/shared/schemas/work-plan.schema'
 import { useAuth } from './useAuth'
+import type { PlanTask } from './usePlanTask'
 
 export interface WorkPlan {
   id: string
@@ -14,6 +15,7 @@ export interface WorkPlan {
   status: 'DRAFT' | 'ACTIVE' | 'CLOSED'
   department?: { name: string }
   supervisors?: any[]
+  tasks?: PlanTask[]
   _count?: { tasks: number }
 }
 

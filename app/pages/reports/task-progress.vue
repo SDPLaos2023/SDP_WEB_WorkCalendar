@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import auth from '~/middleware/auth'
@@ -33,8 +34,8 @@ const handleFilterChange = (newFilters: any) => {
 
 const handleCSVExport = () => {
     downloadCSV(
-        '/api/reports/task-progress', 
-        currentFilters.value, 
+        '/api/reports/task-progress',
+        currentFilters.value,
         `task-progress-${currentFilters.value.year}.csv`
     )
 }
@@ -43,50 +44,53 @@ onMounted(() => {
   fetchData()
 })
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'taskName',
-    header: 'Task Name'
+    header: t('tasks.name')
   },
   {
     accessorKey: 'assignedTo',
-    header: 'Assigned To'
+    header: t('tasks.assign_to')
   },
   {
     accessorKey: 'priority',
-    header: 'Priority',
+    header: t('common.priority'),
     cell: ({ row }) => {
-      const priority = row.getValue('priority') as string
+      const priority = (row.getValue('priority') as string)?.toLowerCase()
       let color = 'neutral'
-      if (priority === 'CRITICAL') color = 'error'
-      if (priority === 'HIGH') color = 'warning'
-      
-      return h(UBadge, { label: priority, color, variant: 'solid', size: 'sm' })
+      if (priority === 'critical' || priority === 'urgent') color = 'error'
+      if (priority === 'high') color = 'warning'
+      if (priority === 'medium') color = 'primary'
+
+      return h(UBadge, { label: t(`common.priority_${priority}`), color, variant: 'solid', size: 'sm' })
     }
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }) => {
-      const status = row.getValue('status') as string
-      let color = 'primary'
-      if (status === 'COMPLETED' || status === 'DONE') color = 'success'
-      
-      return h(UBadge, { label: status, color, variant: 'subtle' })
+      const status = (row.getValue('status') as string)?.toLowerCase()
+      let color = 'neutral'
+      if (status === 'in_progress') color = 'primary'
+      if (status === 'completed' || status === 'done') color = 'success'
+      if (status === 'cancelled') color = 'error'
+
+      return h(UBadge, { label: t(`tasks.status_${status}`), color, variant: 'subtle' })
     }
   },
   {
     accessorKey: 'timeline',
-    header: 'Timeline',
+    header: t('common.date'),
     cell: ({ row }) => {
       const start = row.original.plannedStart
       const end = row.original.plannedEnd
-      return h('span', { class: 'text-xs tabular-nums text-neutral-500' }, `${start} to ${end}`)
+      return h('span', { class: 'text-xs tabular-nums text-neutral-500' }, `${formatDate(start)} to ${formatDate(end)}`)
     }
   },
   {
     accessorKey: 'completionPct',
-    header: 'Completion',
+    header: t('tasks.completion'),
     cell: ({ row }) => {
       const val = row.getValue('completionPct') as string
       const pct = parseInt(val) || 0
@@ -96,7 +100,7 @@ const columns: TableColumn<any>[] = [
       ])
     }
   }
-]
+])
 </script>
 
 <template>
@@ -109,15 +113,15 @@ const columns: TableColumn<any>[] = [
           icon="i-heroicons-arrow-left"
           class="-ml-2 mb-2 print:hidden"
         >
-          Back to Hub
+          {{ t('common.back') }}
         </UButton>
-        <h1 class="text-2xl font-bold font-heading">Task Progress Report</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 font-medium">Tracking all PROJECT tasks and current milestones</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('reports.task_progress') }}</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.task_progress_desc') }}</p>
       </div>
 
-      <ExportButtons 
-        show-print 
-        show-csv 
+      <ExportButtons
+        show-print
+        show-csv
         :loading="loading"
         @csv="handleCSVExport"
       />
@@ -125,11 +129,18 @@ const columns: TableColumn<any>[] = [
 
     <ReportFilter show-department show-work-plan @change="handleFilterChange">
         <template #extra>
-            <UFormGroup label="Status" class="w-40">
-                <USelect 
-                    v-model="currentFilters.status" 
-                    :items="['PENDING', 'IN_PROGRESS', 'DONE', 'CANCELLED']" 
-                    placeholder="All Statuses"
+            <UFormGroup :label="t('common.status')" class="w-40">
+                <USelect
+                    v-model="currentFilters.status"
+                    :items="[
+                        { label: t('tasks.status_pending'), value: 'PENDING' },
+                        { label: t('tasks.status_in_progress'), value: 'IN_PROGRESS' },
+                        { label: t('tasks.status_completed'), value: 'COMPLETED' },
+                        { label: t('tasks.status_cancelled'), value: 'CANCELLED' }
+                    ]"
+                    label-key="label"
+                    value-key="value"
+                    :placeholder="t('common.all')"
                     @change="fetchData"
                 />
             </UFormGroup>
@@ -137,20 +148,20 @@ const columns: TableColumn<any>[] = [
     </ReportFilter>
 
     <UCard class="overflow-hidden shadow-sm">
-        <UTable 
-            :data="data" 
-            :columns="columns" 
-            :loading="loading" 
+        <UTable
+            :data="data"
+            :columns="columns"
+            :loading="loading"
         >
             <template #empty-state>
                 <div class="flex flex-col items-center justify-center py-10 gap-3">
                     <UIcon name="i-heroicons-clipboard-document-list" class="text-4xl text-neutral-300" />
-                    <p class="text-neutral-400">No project tasks found for the selected criteria.</p>
+                    <p class="text-neutral-400">{{ t('common.none') }}</p>
                 </div>
             </template>
         </UTable>
     </UCard>
-    
+
     <div v-if="error" class="bg-error-50 dark:bg-error-900/10 border border-error-500/20 text-error-600 dark:text-error-400 p-4 rounded-xl text-sm font-medium">
         {{ error }}
     </div>

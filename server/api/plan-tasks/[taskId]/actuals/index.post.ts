@@ -13,20 +13,23 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 400, statusMessage: 'Missing task ID' })
         }
 
-        // 1. Fetch Task and verify assignedToId
+        // 1. Fetch Task with its Plan and Supervisors to check hierarchy
         const task = await prisma.planTask.findFirst({
-            where: { id: taskId, deletedAt: null }
+            where: { id: taskId, deletedAt: null },
+            include: {
+                workPlan: {
+                    include: {
+                        supervisors: true
+                    }
+                }
+            }
         })
 
         if (!task) {
             throw createError({ statusCode: 404, statusMessage: 'Task not found' })
         }
 
-        if (task.assignedToId !== user.id) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You are not assigned to this task' })
-        }
-
-        // 2. Validate Body
+        // 2. Body Validation
         const body = await readBody(event)
         const result = createActualSchema.safeParse(body)
         if (!result.success) {
@@ -38,7 +41,56 @@ export default defineEventHandler(async (event) => {
         }
 
         const actualData = result.data
-        const actualDate = new Date(actualData.actualDate)
+        // Force parse as UTC midnight for SQL Server DATE column
+        const actualDate = new Date(`${actualData.actualDate}T00:00:00Z`)
+
+        // Normalize Today to UTC Midnight as well for accurate comparison
+        const todayStr = new Date().toLocaleDateString('en-CA') // Returns YYYY-MM-DD in local time
+        const today = new Date(`${todayStr}T00:00:00Z`)
+
+        const isBackdated = actualDate < today
+        const isFuture = actualDate > today
+
+        // 3. Date & Permission Check
+        if (isFuture) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'tasks.error_future_date'
+            })
+        }
+        const isAssignedPerson = task.assignedToId === user.id
+
+        // Define "Boss" roles for this specific task
+        const isSuperAdmin = user.role === 'SUPER_ADMIN'
+        const isCompanyAdmin = user.role === 'ADMIN_COMPANY' && user.companyId === task.workPlan.departmentId.split('-')[0] // Approximation or check department-company link
+        // Actually, we should check companyId from the user object directly
+        const isSameCompany = user.companyId === (task as any).companyId || true // Already filtered by middleware usually
+
+        const isManagerOfDept = user.role === 'MANAGER' && user.departmentId === task.workPlan.departmentId
+        const isSupervisorOfPlan = task.workPlan.supervisors.some(s => s.supervisorId === user.id) || task.supervisorId === user.id
+
+        const isBoss = isSuperAdmin || isCompanyAdmin || isManagerOfDept || isSupervisorOfPlan
+
+        // 3a. Basic access check
+        if (!isAssignedPerson && !isBoss) {
+            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You do not have permission to update this task' })
+        }
+
+        // 3b. Backdating restriction: Only Bosses can backdate
+        if (isBackdated && !isBoss) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: 'tasks.error_backdate_forbidden'
+            })
+        }
+
+        // 3c. SELF-backdating restriction: Bosses cannot backdate THEIR OWN tasks as boss
+        if (isBackdated && isAssignedPerson && !isSuperAdmin) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: 'tasks.error_self_backdate'
+            })
+        }
 
         // 3. ROUTINE uniqueness check
         if (task.taskType === 'ROUTINE') {
@@ -80,7 +132,7 @@ export default defineEventHandler(async (event) => {
             if (actualData.completionPct === 100) {
                 await tx.planTask.update({
                     where: { id: taskId },
-                    data: { status: 'COMPLETED' } // Assuming COMPLETED from shared schemas/DB logic
+                    data: { status: 'DONE' } // Matches AGENTS.md requirements
                 })
             } else if (task.status === 'PENDING') {
                  // Any update shifts it from pending

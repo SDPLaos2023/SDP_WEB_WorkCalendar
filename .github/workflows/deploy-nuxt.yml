@@ -1,5 +1,4 @@
-name: Deploy SDP_WEB_WorkCalendar (Nuxt) to IIS
-
+name: Deploy SDP_WEB_WorkCalendar (Nuxt) with PM2
 
 on:
   push:
@@ -11,38 +10,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "24"
       - name: Install dependencies
         run: npm install
       - name: Run tests
         run: npm run test
-
-  call-deploy:
+  deploy:
     needs: test
-    uses: SDPLaos2023/github-workflows/.github/workflows/deploy-iis-nuxt.yml@main
-    with:
-      app_pool: 'WorkCalendar'
-      deploy_path: 'C:\inetpub\wwwroot\Work_Calendar\.output'
-      backup_prefix: 'WorkCalendar'
-      runner_label: 'TDP-IMMIGRATION'
-      package_manager: 'npm'
-      node_version: '22'
-      build_script: 'build'
-      build_output: '.output'
-      backup_keep: 5
-
-  # เพิ่ม Job ใหม่ทำงานต่อจาก Job แรกเพื่อสั่ง PM2
-  post-deploy:
-    needs: call-deploy # สั่งให้ทำงานหลังจาก call-deploy เสร็จเท่านั้น
-    runs-on: ['self-hosted', 'TDP-IMMIGRATION']
+    runs-on: ["self-hosted", "TDP-IMMIGRATION"]
     steps:
-      - name: Restart PM2 and Save
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install dependencies
+        run: npm install
+      - name: prism generate
+        run: npx prisma generate
+      - name: build Nuxt app
+        run: npm run build
+      - name: Copy build to IIS folder
+        shell: cmd
+        run: |
+          if exist C:\inetpub\wwwroot\Work_Calendar\prd rmdir /s /q C:\inetpub\wwwroot\Work_Calendar\prd
+          xcopy .output C:\inetpub\wwwroot\Work_Calendar\prd /E /I /Y
+  pm2_restart:
+    needs: deploy
+    runs-on: ["self-hosted", "TDP-IMMIGRATION"]
+    steps:
+      - name: Start/Restart PM2
         shell: cmd
         run: |
           cd C:\inetpub\wwwroot\Work_Calendar
+          nvm use 24
           pm2 startOrRestart ecosystem.config.cjs --env production
           pm2 save

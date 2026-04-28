@@ -46,8 +46,8 @@ export default defineEventHandler(async (event) => {
         */
 
         // 4. Calculate totalDays
-        const start = new Date(planStartDate)
-        const end = new Date(planEndDate)
+        const start = new Date(`${planStartDate}T00:00:00Z`)
+        const end = new Date(`${planEndDate}T00:00:00Z`)
         const diffMs = end.getTime() - start.getTime()
         const totalDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1)
 

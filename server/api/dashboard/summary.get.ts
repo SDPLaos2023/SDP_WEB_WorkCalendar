@@ -91,7 +91,7 @@ export default defineEventHandler(async (event) => {
         // Routine Compliance Average
         let totalCompliancePct = 0
         let missedTodayCount = 0
-        const todayStr = new Date().toISOString().split('T')[0]
+        const todayStr = new Date().toLocaleDateString('en-CA')
 
         routines.forEach(r => {
             totalCompliancePct += Number(r.compliancePct || 0)
@@ -141,12 +141,12 @@ export default defineEventHandler(async (event) => {
         for (let i = 0; i < 7; i++) {
             const d = new Date()
             d.setDate(d.getDate() - i)
-            const dateStr = d.toISOString().split('T')[0] as string
+            const dateStr = d.toLocaleDateString('en-CA')
             trendDataMap[dateStr] = 0
         }
 
         recentActuals.forEach(a => {
-            const date = a.createdAt.toISOString().split('T')[0] as string
+            const date = a.createdAt.toLocaleDateString('en-CA')
             if (trendDataMap[date] !== undefined) {
                 trendDataMap[date] = (trendDataMap[date] as number) + 1
             }
@@ -168,7 +168,7 @@ export default defineEventHandler(async (event) => {
                 projectAvgCompletion,
                 routineComplianceAvg,
                 missedToday: missedTodayCount,
-                updatesToday: recentActuals.filter(a => a.createdAt >= new Date(new Date().setHours(0,0,0,0))).length,
+                updatesToday: recentActuals.filter(a => a.createdAt.toLocaleDateString('en-CA') === todayStr).length,
                 statusBreakdown,
                 topDepartments,
                 trend: trendData

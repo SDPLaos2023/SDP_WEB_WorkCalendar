@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { updateWorkPlanSchema } from '~~/shared/schemas/work-plan.schema'
 import type { FormSubmitEvent } from '#ui/types'
 
@@ -56,15 +57,15 @@ watch(open, (val) => {
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   if (!props.plan?.id) return
-  
+
   loading.value = true
   try {
     await update(props.plan.id, state as any)
-    toast.add({ title: 'Plan updated successfully', color: 'success' })
+    toast.add({ title: t('common.success'), color: 'success' })
     emit('success')
     open.value = false
   } catch (err: any) {
-    toast.add({ title: 'Failed to update plan', description: err.data?.statusMessage, color: 'error' })
+    toast.add({ title: t('common.error'), description: err.data?.statusMessage, color: 'error' })
   } finally {
     loading.value = false
   }
@@ -75,20 +76,20 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   <UModal v-model:open="open" title="Edit Work Plan" description="Update basic information for this work plan">
     <template #content>
       <UForm :schema="updateWorkPlanSchema" :state="state" @submit="onSubmit" class="p-6 space-y-4">
-        <UFormField label="Plan Title" name="title">
+        <UFormField :label="t('plans.title')" name="title">
           <UInput v-model="state.title" class="w-full" />
         </UFormField>
 
-        <UFormField label="Description" name="description">
+        <UFormField :label="t('common.description')" name="description">
           <UTextarea v-model="state.description" class="w-full" />
         </UFormField>
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="Year" name="year">
+          <UFormField :label="t('common.year')" name="year">
             <UInput v-model.number="state.year" type="number" class="w-full" />
           </UFormField>
 
-          <UFormField label="Department" name="departmentId">
+          <UFormField :label="t('plans.department')" name="departmentId">
             <USelect
               v-model="state.departmentId"
               :items="departments"
@@ -102,17 +103,17 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
         <div class="grid grid-cols-2 gap-4">
           <UFormField label="Start Date" name="planStartDate">
-            <UInput v-model="state.planStartDate" type="date" class="w-full" />
+            <DatePicker v-model="state.planStartDate" class="w-full" />
           </UFormField>
 
           <UFormField label="End Date" name="planEndDate">
-            <UInput v-model="state.planEndDate" type="date" class="w-full" />
+            <DatePicker v-model="state.planEndDate" class="w-full" />
           </UFormField>
         </div>
 
         <div class="flex justify-end gap-3 pt-4">
-          <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false" />
-          <UButton type="submit" label="Save Changes" :loading="loading" color="primary" />
+          <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
+          <UButton type="submit" :label="t('common.save')" :loading="loading" color="primary" />
         </div>
       </UForm>
     </template>

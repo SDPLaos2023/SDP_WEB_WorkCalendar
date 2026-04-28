@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import type { TableColumn } from '@nuxt/ui'
 import type { RowSelectionState } from '@tanstack/table-core'
 
@@ -10,7 +11,7 @@ definePageMeta({
 const { apiFetch } = useAuth()
 const UCheckbox = resolveComponent('UCheckbox')
 
-const columns: TableColumn<any>[] = [
+const columns = computed<TableColumn<any>[]>(() => [
   {
     id: 'select',
     header: ({ table }) => h(UCheckbox, {
@@ -27,10 +28,10 @@ const columns: TableColumn<any>[] = [
     })
   },
   { accessorKey: 'code', header: 'Code' },
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'createdAt', header: 'Created At', cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString() },
+  { accessorKey: 'name', header: t('common.name') },
+  { accessorKey: 'createdAt', header: t('common.date'), cell: ({ row }) => formatDate(row.getValue('createdAt')) },
   { id: 'actions', header: '' }
-]
+])
 
 const page = ref(1)
 const pageSize = ref(10)
@@ -128,8 +129,8 @@ async function onConfirmDelete() {
 
 function getRowItems(company: any) {
   return [[
-    { label: 'Edit', icon: 'i-heroicons-pencil-square', onSelect: () => openEdit(company) },
-    { label: 'Delete', icon: 'i-heroicons-trash', onSelect: () => startDelete(company) }
+    { label: t('common.edit'), icon: 'i-heroicons-pencil-square', onSelect: () => openEdit(company) },
+    { label: t('common.delete'), icon: 'i-heroicons-trash', onSelect: () => startDelete(company) }
   ]]
 }
 </script>
@@ -138,20 +139,20 @@ function getRowItems(company: any) {
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold font-heading">Master Data: Companies</h1>
-        <p class="text-gray-500">Manage organizational entities</p>
+        <h1 class="text-2xl font-bold font-heading">{{ t('management.company') }}</h1>
+        <p class="text-gray-500">{{ t('management.companies_subtitle') }}</p>
       </div>
     </div>
 
     <UCard>
       <div class="flex items-center justify-between mb-4 gap-4">
         <div class="flex gap-4 flex-1">
-          <UInput v-model="search" icon="i-heroicons-magnifying-glass" placeholder="Search companies..." class="w-64" />
+          <UInput v-model="search" icon="i-heroicons-magnifying-glass" :placeholder="t('common.search')" class="w-64" />
         </div>
 
         <div class="flex gap-2">
-          <UButton v-if="selection.length > 0" label="Delete Selected" icon="i-heroicons-trash" color="error" variant="soft" @click="startBulkDelete" />
-          <UButton label="Add Company" icon="i-heroicons-plus" @click="openCreate" />
+          <UButton v-if="selection.length > 0" :label="t('common.delete')" icon="i-heroicons-trash" color="error" variant="soft" @click="startBulkDelete" />
+          <UButton :label="t('common.create')" icon="i-heroicons-plus" @click="openCreate" />
         </div>
       </div>
 
@@ -173,8 +174,8 @@ function getRowItems(company: any) {
 
       <div class="flex items-center justify-between mt-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-500">Total: {{ totalCompanies }} companies</span>
-          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }} selected)</span>
+          <span class="text-sm text-gray-500">{{ t('common.all') }}: {{ totalCompanies }}</span>
+          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }})</span>
         </div>
         <UPagination v-model:page="page" :total="totalCompanies" :items-per-page="pageSize" />
       </div>
@@ -184,10 +185,10 @@ function getRowItems(company: any) {
 
     <ConfirmModal
       v-model:open="isConfirmOpen"
-      :title="isBulkDelete ? 'Bulk Delete Companies' : 'Delete Company'"
+      :title="t('common.delete')"
       :description="isBulkDelete
-        ? `ກະລຸນາຢືນຢັນການລົບ ${selection.length} ບໍລິສັດທີ່ເລືອກ?`
-        : `ກະລຸນາຢືນຢັນການລົບ ${confirmTarget?.name}?`"
+        ? t('plans.confirm_delete')
+        : t('plans.confirm_delete')"
       :loading="deleting"
       @confirm="onConfirmDelete"
       @close="isConfirmOpen = false"
