@@ -104,10 +104,7 @@ onMounted(() => {
     loadTask()
 })
 
-const formatDate = (date: string) => {
-    if (!date) return '-'
-    return new Date(date).toLocaleDateString()
-}
+
 </script>
 
 <template>
@@ -228,9 +225,7 @@ const formatDate = (date: string) => {
                       class="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 hover:border-primary-100 dark:hover:border-primary-900 transition-all group"
                     >
                       <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-black text-neutral-400 group-hover:text-primary transition-colors uppercase tracking-widest">
-                          {{ format(new Date(actual.actualDate), 'dd MMM yyyy') }}
-                        </span>
+                          {{ formatDate(actual.actualDate) }}
                         <UBadge 
                           :label="t(`tasks.status_${actual.status.toLowerCase()}`)" 
                           :color="getStatusColor(actual.status)" 

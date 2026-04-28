@@ -85,7 +85,7 @@ const columns = computed<TableColumn<any>[]>(() => [
     cell: ({ row }) => {
       const start = row.original.plannedStart
       const end = row.original.plannedEnd
-      return h('span', { class: 'text-xs tabular-nums text-neutral-500' }, `${start} to ${end}`)
+      return h('span', { class: 'text-xs tabular-nums text-neutral-500' }, `${formatDate(start)} to ${formatDate(end)}`)
     }
   },
   {

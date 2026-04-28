@@ -11,13 +11,13 @@ const navigation = computed(() => {
   ]
 
   // Add management links if applicable
-  if (hasRole(['SUPER_ADMIN']).value) {
+  if (hasRole(['SUPER_ADMIN'])) {
     links.push({ label: t('navigation.companies'), icon: 'i-heroicons-building-office-2', to: '/companies' })
   }
-  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY']).value) {
+  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY'])) {
     links.push({ label: t('navigation.departments'), icon: 'i-heroicons-rectangle-stack', to: '/departments' })
   }
-  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER']).value) {
+  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER'])) {
     links.push({ label: t('navigation.users'), icon: 'i-heroicons-users', to: '/users' })
   }
   links.push({ label: t('navigation.reports'), icon: 'i-heroicons-chart-bar', to: '/reports' })

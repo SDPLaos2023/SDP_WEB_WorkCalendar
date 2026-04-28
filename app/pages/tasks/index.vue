@@ -162,7 +162,7 @@ const getTaskComplianceColor = (pct: number) => {
                         <h3 class="font-bold text-lg group-hover:text-primary leading-tight">{{ task.taskName }}</h3>
                         <div class="text-xs text-neutral-500 flex items-center gap-1">
                             <UIcon name="i-heroicons-calendar" />
-                            {{ task.plannedStart ? new Date(task.plannedStart).toLocaleDateString() : '?' }} - {{ task.plannedEnd ? new Date(task.plannedEnd).toLocaleDateString() : '?' }}
+                            {{ formatDate(task.plannedStart) }} - {{ formatDate(task.plannedEnd) }}
                         </div>
                     </div>
                     <UButton icon="i-heroicons-bolt" color="primary" variant="soft" @click.stop="navigateTo(`/tasks/${task.id}`)">{{ t('tasks.update_progress') }}</UButton>

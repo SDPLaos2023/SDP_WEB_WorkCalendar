@@ -376,9 +376,9 @@ async function handleDelete() {
                                   <div class="flex items-center justify-end gap-3">
                                     <div class="flex flex-col items-end gap-1">
                                       <div class="flex items-center gap-1 text-[11px] font-bold text-neutral-500">
-                                        <span>{{ task.plannedStart ? new Date(task.plannedStart).toLocaleDateString() : (task.recurrenceStart ? new Date(task.recurrenceStart).toLocaleDateString() : '-') }}</span>
+                                        <span>{{ formatDate(task.plannedStart || task.recurrenceStart) }}</span>
                                         <span>→</span>
-                                        <span>{{ task.plannedEnd ? new Date(task.plannedEnd).toLocaleDateString() : (task.recurrenceEnd ? new Date(task.recurrenceEnd).toLocaleDateString() : '-') }}</span>
+                                        <span>{{ formatDate(task.plannedEnd || task.recurrenceEnd) }}</span>
                                       </div>
                                       <div class="w-20">
                                         <UProgress :value="Math.random() * 100" size="2xs" color="primary" />
