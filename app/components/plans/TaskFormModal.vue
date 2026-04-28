@@ -44,7 +44,14 @@ async function fetchOfficers() {
     const res = await apiFetch<any>(`/api/users?departmentId=${plan.departmentId}&limit=200`)
     if (res.success) {
       const allowedRoles = ['MANAGER', 'SUPERVISOR', 'OFFICER']
-      const fetched = res.data.filter((u: any) => u.isActive && allowedRoles.includes(u.role)).map((u: any) => ({
+      let filtered = res.data.filter((u: any) => u.isActive && allowedRoles.includes(u.role))
+
+      // Supervisors cannot assign tasks to Managers
+      if (user.value?.role === 'SUPERVISOR') {
+        filtered = filtered.filter((u: any) => u.role !== 'MANAGER')
+      }
+
+      const fetched = filtered.map((u: any) => ({
          ...u,
          fullName: `${u.firstName} ${u.lastName} (${u.role})`
       }))
@@ -197,11 +204,11 @@ function assignToMe() {
         <!-- Project Fields -->
         <div v-if="state.taskType === 'PROJECT'" class="grid grid-cols-2 gap-4 mt-4 p-4 border rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
           <UFormField label="Planned Start" name="plannedStart">
-            <UInput v-model="state.plannedStart" type="date" class="w-full" />
+            <DatePicker v-model="state.plannedStart" class="w-full" />
           </UFormField>
 
           <UFormField label="Planned End" name="plannedEnd">
-            <UInput v-model="state.plannedEnd" type="date" class="w-full" />
+            <DatePicker v-model="state.plannedEnd" class="w-full" />
           </UFormField>
         </div>
 
@@ -212,11 +219,11 @@ function assignToMe() {
           </UFormField>
 
           <UFormField label="Valid From" name="recurrenceStart">
-            <UInput v-model="state.recurrenceStart" type="date" class="w-full" />
+            <DatePicker v-model="state.recurrenceStart" class="w-full" />
           </UFormField>
 
           <UFormField label="Valid Until" name="recurrenceEnd">
-            <UInput v-model="state.recurrenceEnd" type="date" class="w-full" />
+            <DatePicker v-model="state.recurrenceEnd" class="w-full" />
           </UFormField>
         </div>
 

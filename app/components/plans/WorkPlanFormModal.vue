@@ -103,11 +103,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
         <div class="grid grid-cols-2 gap-4">
           <UFormField label="Start Date" name="planStartDate">
-            <UInput v-model="state.planStartDate" type="date" class="w-full" />
+            <DatePicker v-model="state.planStartDate" class="w-full" />
           </UFormField>
 
           <UFormField label="End Date" name="planEndDate">
-            <UInput v-model="state.planEndDate" type="date" class="w-full" />
+            <DatePicker v-model="state.planEndDate" class="w-full" />
           </UFormField>
         </div>
 

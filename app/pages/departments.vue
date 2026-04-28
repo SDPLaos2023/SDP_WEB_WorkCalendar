@@ -40,7 +40,7 @@ const columns = computed(() => {
     })
   }
 
-  cols.push({ accessorKey: 'createdAt', header: t('common.date'), cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString() })
+  cols.push({ accessorKey: 'createdAt', header: t('common.date'), cell: ({ row }) => formatDate(row.getValue('createdAt')) })
   cols.push({ id: 'actions', header: '' })
 
   return cols

@@ -87,7 +87,7 @@ const columns = computed<TableColumn<any>[]>(() => [
       const dates = datesString.split(', ')
       return h('div', { class: 'flex flex-wrap gap-1' }, [
         ...dates.slice(0, 2).map(date => h(UBadge, {
-          label: format(new Date(date), 'MMM d'),
+          label: formatDate(date),
           color: 'error',
           variant: 'soft',
           size: 'xs'

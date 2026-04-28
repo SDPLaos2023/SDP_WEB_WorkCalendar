@@ -17,7 +17,7 @@ const toast = useToast()
 
 const sortedActuals = computed(() => {
   if (!props.task?.actuals) return []
-  return [...props.task.actuals].sort((a, b) => 
+  return [...props.task.actuals].sort((a, b) =>
     new Date(b.actualDate).getTime() - new Date(a.actualDate).getTime()
   )
 })
@@ -55,8 +55,12 @@ const isRoutine = computed(() => props.task?.taskType === 'ROUTINE')
 watch(() => props.task, (task) => {
   if (task) {
     state.updateType = (task.recurrenceType || 'DAILY') as 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-    state.completionPct = task.completionPct || 0
     state.status = 'DONE'
+    if (isRoutine.value) {
+      state.completionPct = 100
+    } else {
+      state.completionPct = task.completionPct || 0
+    }
     if (props.initialDate) {
       state.actualDate = props.initialDate
     }
@@ -76,10 +80,10 @@ watch(existingRecord, (record) => {
     state.completionPct = Number(record.completionPct)
     state.note = record.note || ''
     state.updateType = record.updateType || state.updateType
-  } else if (!isRoutine.value) {
-     // Reset for new records in projects
-     state.completionPct = 0
+  } else {
+     // Reset for new records
      state.status = 'DONE'
+     state.completionPct = isRoutine.value ? 100 : 0
      state.note = ''
   }
 }, { immediate: true })
@@ -100,10 +104,10 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
   loading.value = true
   try {
-    const url = isEditMode.value 
+    const url = isEditMode.value
       ? `/api/plan-tasks/${props.task.id}/actuals/${existingRecord.value.id}`
       : `/api/plan-tasks/${props.task.id}/actuals`
-    
+
     const method = isEditMode.value ? 'PATCH' : 'POST'
 
     const res = await apiFetch<any>(url, {
@@ -119,12 +123,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   } catch (err: any) {
     const errorMsg = (err.data?.statusMessage || 'common.error_internal').trim()
     console.log('[API_ERROR_DEBUG]:', errorMsg)
-    
+
     // Attempt translation of the message slug
-    toast.add({ 
-      title: t('common.error'), 
-      description: t(errorMsg), 
-      color: 'error' 
+    toast.add({
+      title: t('common.error'),
+      description: t(errorMsg),
+      color: 'error'
     })
   } finally {
     loading.value = false
@@ -138,7 +142,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       <UForm :schema="createActualSchema" :state="state" @submit="onSubmit" class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <UFormField :label="t('common.date')" name="actualDate">
-            <UInput v-model="state.actualDate" type="date" class="w-full" />
+            <DatePicker v-model="state.actualDate" class="w-full" />
           </UFormField>
 
           <UFormField :label="t('tasks.frequency')" name="updateType">
@@ -149,14 +153,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         </div>
 
         <UFormField :label="t('common.status')" name="status">
-          <USelect 
-            v-model="state.status" 
+          <USelect
+            v-model="state.status"
             :items="[
               { label: t('tasks.status_done'), value: 'DONE' },
               { label: t('tasks.status_partial'), value: 'PARTIAL' },
               { label: t('tasks.status_not_done'), value: 'NOT_DONE' }
-            ]" 
-            class="w-full" 
+            ]"
+            class="w-full"
           />
         </UFormField>
 
@@ -171,14 +175,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
                 </UInput>
                 <UInput v-model.number="state.completionPct" type="range" :min="0" :max="100" class="flex-1" />
             </div>
-            
+
             <div class="flex flex-wrap gap-2">
-                <UButton 
-                    v-for="val in [0, 25, 50, 75, 100]" 
-                    :key="val" 
-                    :label="`${val}%`" 
-                    variant="soft" 
-                    size="xs" 
+                <UButton
+                    v-for="val in [0, 25, 50, 75, 100]"
+                    :key="val"
+                    :label="`${val}%`"
+                    variant="soft"
+                    size="xs"
                     color="neutral"
                     @click="state.completionPct = val"
                     :class="state.completionPct === val ? 'ring-2 ring-primary bg-primary-100 dark:bg-primary-900 border-primary-500' : ''"
@@ -211,14 +215,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
           </div>
 
           <div class="space-y-3 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800">
-            <div 
-              v-for="actual in sortedActuals" 
+            <div
+              v-for="actual in sortedActuals"
               :key="actual.id"
               class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-100 dark:border-neutral-800 hover:border-primary-100 dark:hover:border-primary-900 transition-all group"
             >
               <div class="flex flex-col gap-0.5">
                 <span class="text-xs font-black text-neutral-400 group-hover:text-primary transition-colors uppercase tracking-widest">
-                  {{ format(new Date(actual.actualDate), 'dd MMM yyyy') }}
+                  {{ formatDate(actual.actualDate) }}
                 </span>
                 <p v-if="actual.note" class="text-xs text-neutral-500 italic line-clamp-1">"{{ actual.note }}"</p>
                 <p v-else class="text-xs text-neutral-400 opacity-50">{{ t('common.none') }}</p>
@@ -226,10 +230,10 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
               <div class="flex items-center gap-3 text-right">
                 <div class="flex flex-col items-end">
-                  <UBadge 
-                    :label="t(`tasks.status_${actual.status.toLowerCase()}`)" 
-                    :color="getStatusColor(actual.status)" 
-                    variant="soft" 
+                  <UBadge
+                    :label="t(`tasks.status_${actual.status.toLowerCase()}`)"
+                    :color="getStatusColor(actual.status)"
+                    variant="soft"
                     size="sm"
                     class="font-extrabold uppercase tracking-tighter"
                   />

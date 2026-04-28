@@ -220,11 +220,11 @@ async function submitAll() {
           </UFormField>
 
           <UFormField label="Start Date" name="planStartDate">
-            <UInput v-model="planState.planStartDate" type="date" />
+            <DatePicker v-model="planState.planStartDate" class="w-full" />
           </UFormField>
 
           <UFormField label="End Date" name="planEndDate">
-             <UInput v-model="planState.planEndDate" type="date" />
+             <DatePicker v-model="planState.planEndDate" class="w-full" />
           </UFormField>
 
           <UFormField label="Supervisors (Management)" name="supervisorIds" class="md:col-span-2">
@@ -281,10 +281,10 @@ async function submitAll() {
             <!-- Conditional Fields for Project -->
             <template v-if="currentTask.taskType === 'PROJECT'">
               <UFormField label="Planned Start">
-                <UInput v-model="currentTask.plannedStart" type="date" />
+                <DatePicker v-model="currentTask.plannedStart" class="w-full" />
               </UFormField>
               <UFormField label="Planned End">
-                <UInput v-model="currentTask.plannedEnd" type="date" />
+                <DatePicker v-model="currentTask.plannedEnd" class="w-full" />
               </UFormField>
             </template>
 
@@ -294,10 +294,10 @@ async function submitAll() {
                 <USelect v-model="currentTask.recurrenceType" :items="['DAILY', 'WEEKLY', 'MONTHLY']" />
               </UFormField>
               <UFormField label="Valid From">
-                <UInput v-model="currentTask.recurrenceStart" type="date" />
+                <DatePicker v-model="currentTask.recurrenceStart" class="w-full" />
               </UFormField>
               <UFormField label="Valid Until">
-                <UInput v-model="currentTask.recurrenceEnd" type="date" />
+                <DatePicker v-model="currentTask.recurrenceEnd" class="w-full" />
               </UFormField>
             </template>
 

@@ -29,7 +29,7 @@ const columns = computed<TableColumn<any>[]>(() => [
   },
   { accessorKey: 'code', header: 'Code' },
   { accessorKey: 'name', header: t('common.name') },
-  { accessorKey: 'createdAt', header: t('common.date'), cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString() },
+  { accessorKey: 'createdAt', header: t('common.date'), cell: ({ row }) => formatDate(row.getValue('createdAt')) },
   { id: 'actions', header: '' }
 ])
 

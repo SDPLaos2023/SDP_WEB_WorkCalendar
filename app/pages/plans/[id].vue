@@ -102,7 +102,7 @@ const projectColumns = computed<TableColumn<any>[]>(() => [
         }
       }))
       // if user can edit
-      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR']).value) {
+      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])) {
         children.push(h(UButtonComp, {
           icon: 'i-heroicons-pencil',
           label: 'Edit',
@@ -165,7 +165,7 @@ const routineColumns = computed<TableColumn<any>[]>(() => [
           handleDirectUpdate(row.original)
         }
       }))
-      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR']).value) {
+      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])) {
         children.push(h(UButtonComp, {
           icon: 'i-heroicons-pencil',
           label: 'Edit',
@@ -273,12 +273,7 @@ async function handleStatusChange(newStatus: 'ACTIVE' | 'CLOSED') {
     }
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return 'Invalid Date'
-  return new Date(dateStr).toLocaleDateString('th-TH', {
-    dateStyle: 'medium'
-  })
-}
+
 
 function formatTime(dateStr: string) {
   if (!dateStr) return 'N/A'

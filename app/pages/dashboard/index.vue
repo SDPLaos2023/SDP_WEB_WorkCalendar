@@ -114,7 +114,7 @@ const complianceColumns: TableColumn<any>[] = [
       }
       return h('div', { class: 'flex flex-wrap gap-1' }, [
         ...dates.slice(0, 2).map(date => h(UBadge, {
-          label: format(new Date(date), 'MMM d'),
+          label: formatDate(date),
           color: 'error',
           variant: 'soft',
           size: 'sm'
@@ -131,13 +131,13 @@ const maxTrendValue = computed(() => {
 
 const trendStartDate = computed(() => {
   const d = summary.value?.trend?.[0]?.date
-  return d ? format(new Date(d), 'MMM d') : ''
+  return d ? formatDate(new Date(d)) : ''
 })
 
 const trendEndDate = computed(() => {
   const trend = summary.value?.trend
   const d = trend?.[trend.length - 1]?.date
-  return d ? format(new Date(d), 'MMM d') : ''
+  return d ? formatDate(new Date(d)) : ''
 })
 </script>
 
