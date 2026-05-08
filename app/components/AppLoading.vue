@@ -77,7 +77,7 @@ const { isLoading, progress } = indicator
            />
         </div>
         
-        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest opacity-60">
+        <p class="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase tracking-widest opacity-60">
            {{ Math.round(progress) }}% Loaded
         </p>
       </div>

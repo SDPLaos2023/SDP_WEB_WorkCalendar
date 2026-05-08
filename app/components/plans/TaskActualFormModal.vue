@@ -193,7 +193,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
         <!-- Small indicator for Routine task % -->
         <div v-else class="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md">
-            <span class="text-sm font-medium">{{ t('tasks.completion') }}:</span>
+            <span class="text-sm font-normal">{{ t('tasks.completion') }}:</span>
             <UBadge :label="`${state.completionPct}%`" variant="subtle" color="primary" />
         </div>
 

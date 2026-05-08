@@ -26,7 +26,7 @@
         <h2 class="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-6">
           Streamline your <span class="text-orange-500">organization</span> with precision.
         </h2>
-        <p class="text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+        <p class="text-lg text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
           The ultimate structured environment for project planning, task tracking, and workforce compliance.
         </p>
       </div>
@@ -59,7 +59,7 @@
         <div class="text-center lg:text-left">
           <div class="text-[11px] font-black uppercase tracking-[0.4em] text-orange-500 mb-2">Secure Gateway</div>
           <h3 class="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-3 italic uppercase">Portal <span class="text-slate-400 dark:text-slate-600">Login</span></h3>
-          <p class="text-slate-500 dark:text-slate-400 font-medium">Please enter your credentials to access the enterprise suite.</p>
+          <p class="text-slate-500 dark:text-slate-400 font-normal">Please enter your credentials to access the enterprise suite.</p>
         </div>
 
         <div class="u-card p-8 lg:p-10 border-slate-200 dark:border-slate-800 shadow-2xl relative overflow-hidden bg-white dark:bg-slate-900">

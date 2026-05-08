@@ -287,7 +287,7 @@ async function onConfirmDelete() {
             <div class="flex items-center gap-3 text-sm">
               <UAvatar :src="(row.original.avatar as string | undefined)" :alt="(row.original.name as string)" size="sm" />
               <div class="flex flex-col">
-                <span class="font-medium text-highlighted">{{ row.original.name }}</span>
+                <span class="font-normal text-highlighted">{{ row.original.name }}</span>
               </div>
             </div>
           </template>

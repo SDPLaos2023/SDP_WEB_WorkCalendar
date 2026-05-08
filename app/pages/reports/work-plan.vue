@@ -64,7 +64,7 @@ const handleExcelExport = () => {
         <h1 class="text-2xl font-bold font-heading">
             {{ reportData?.meta?.title || t('reports.annual_plan') }}
         </h1>
-        <div class="flex items-center gap-4 text-sm text-neutral-500 font-medium">
+        <div class="flex items-center gap-4 text-sm text-neutral-500 font-normal">
             <span v-if="reportData?.meta?.date">{{ t('common.date') }}: {{ reportData.meta.date }}</span>
             <span class="print:hidden">|</span>
             <p class="print:hidden">{{ t('common.status') }}: {{ currentFilters.status || t('common.all') }}</p>
@@ -123,12 +123,12 @@ const handleExcelExport = () => {
     
     <WorkPlanGrid v-else-if="reportData" :data="reportData" />
 
-    <div v-if="error" class="bg-error-50 dark:bg-error-900/10 border border-error-500/20 text-error-600 dark:text-error-400 p-4 rounded-xl text-sm font-medium">
+    <div v-if="error" class="bg-error-50 dark:bg-error-900/10 border border-error-500/20 text-error-600 dark:text-error-400 p-4 rounded-xl text-sm font-normal">
         {{ error }}
     </div>
 
     <div class="hidden print:block mt-12 pt-8 border-t border-neutral-200">
-        <div class="grid grid-cols-3 gap-8 text-center text-sm font-medium">
+        <div class="grid grid-cols-3 gap-8 text-center text-sm font-normal">
             <div class="space-y-12">
                 <p>ຜູ້ກະກຽມ / Prepared by</p>
                 <div class="h-px bg-neutral-300 w-48 mx-auto"></div>

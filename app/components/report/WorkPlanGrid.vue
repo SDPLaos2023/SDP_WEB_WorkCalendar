@@ -40,7 +40,7 @@ const weeks = ['W1', 'W2', 'W3', 'W4']
           </tr>
           <tr class="bg-neutral-800">
             <template v-for="month in months" :key="month">
-              <th v-for="week in weeks" :key="week" class="py-1 text-[9px] font-medium border-r border-neutral-700 w-[24px]">
+              <th v-for="week in weeks" :key="week" class="py-1 text-[9px] font-normal border-r border-neutral-700 w-[24px]">
                 {{ week }}
               </th>
             </template>
@@ -64,7 +64,7 @@ const weeks = ['W1', 'W2', 'W3', 'W4']
     <!-- Empty State -->
     <div v-if="!data.sections?.length" class="flex flex-col items-center justify-center py-20 bg-neutral-50 dark:bg-neutral-900/10">
       <UIcon name="i-heroicons-document-text" class="text-5xl text-neutral-300 mb-2" />
-      <p class="text-neutral-500 font-medium">{{ t('common.none') }}</p>
+      <p class="text-neutral-500 font-normal">{{ t('common.none') }}</p>
     </div>
   </div>
 </template>

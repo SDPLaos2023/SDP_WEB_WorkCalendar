@@ -181,7 +181,7 @@ async function submitAll() {
   <div class="max-w-4xl mx-auto space-y-8">
     <header>
       <h1 class="text-3xl font-bold font-heading">Create New Work Plan</h1>
-      <p class="text-neutral-500 font-medium">Follow the steps to establish a new departmental goal</p>
+      <p class="text-neutral-500 font-normal">Follow the steps to establish a new departmental goal</p>
     </header>
 
     <!-- Manual Stepper -->
@@ -312,7 +312,7 @@ async function submitAll() {
           <p v-if="tasks.length === 0" class="text-sm text-neutral-500 italic">No tasks added yet. You can add tasks later or assign a supervisor to do it.</p>
           <div v-for="(t, i) in tasks" :key="i" class="flex items-center justify-between p-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md">
             <div>
-              <p class="font-medium">{{ t.taskName }}</p>
+              <p class="font-normal">{{ t.taskName }}</p>
               <p class="text-xs text-neutral-500">
                 Type: {{ t.taskType }} •
                 Assigned: {{ users.find(u => u.id === t.assignedToId)?.fullName || 'Not assigned' }} •
@@ -374,7 +374,7 @@ async function submitAll() {
             ]"
           />
           <div v-else class="text-center py-8 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <p class="text-sm text-neutral-500 font-medium">No initial tasks created.</p>
+            <p class="text-sm text-neutral-500 font-normal">No initial tasks created.</p>
             <p class="text-xs text-neutral-400 mt-1">Supervisors will be able to add tasks after the plan is created.</p>
           </div>
         </div>

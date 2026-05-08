@@ -30,7 +30,7 @@ const items = [{
         />
 
         <div class="text-sm min-w-0">
-          <p class="text-highlighted font-medium truncate">
+          <p class="text-highlighted font-normal truncate">
             {{ member.name }}
           </p>
           <p class="text-muted truncate">

@@ -32,7 +32,7 @@ const isActual = (month: string, week: string) => {
     <td class="sticky left-0 bg-white dark:bg-neutral-950 z-10 px-3 py-2 text-xs text-neutral-500 border-r border-neutral-100 dark:border-neutral-800">
       {{ task.no }}
     </td>
-    <td class="sticky left-[41px] bg-white dark:bg-neutral-950 z-10 px-3 py-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 border-r border-neutral-100 dark:border-neutral-800 min-w-[200px] max-w-[300px] truncate">
+    <td class="sticky left-[41px] bg-white dark:bg-neutral-950 z-10 px-3 py-2 text-xs font-normal text-neutral-900 dark:text-neutral-100 border-r border-neutral-100 dark:border-neutral-800 min-w-[200px] max-w-[300px] truncate">
       {{ task.taskName }}
     </td>
     <td class="sticky left-[241px] bg-white dark:bg-neutral-950 z-10 px-2 py-2 text-[10px] text-center text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 w-[60px]">

@@ -90,7 +90,7 @@ const columns: TableColumn<Sale>[] = [
         currency: 'EUR'
       }).format(amount)
 
-      return h('div', { class: 'text-right font-medium' }, formatted)
+      return h('div', { class: 'text-right font-normal' }, formatted)
     }
   }
 ]

@@ -16,6 +16,42 @@ const { apiFetch, user } = useAuth()
 const toast = useToast()
 
 const isEditMode = computed(() => !!props.task?.id)
+const isCreateMode = computed(() => !isEditMode.value)
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const weeks = ['W1', 'W2', 'W3', 'W4']
+
+function buildDefaultPlannedWeeks(recurrenceType: string) {
+  // Annual grid selection is stored as JSON string:
+  // ["Jan-W1","Jan-W2",...]
+  if (recurrenceType === 'DAILY' || recurrenceType === 'WEEKLY') {
+    const keys: string[] = []
+    for (const m of months) {
+      for (const w of weeks) keys.push(`${m}-${w}`)
+    }
+    return JSON.stringify(keys)
+  }
+
+  if (recurrenceType === 'MONTHLY') {
+    // Default to the first week of each month.
+    const keys = months.map(m => `${m}-W1`)
+    return JSON.stringify(keys)
+  }
+
+  if (recurrenceType === 'QUARTERLY') {
+    // Default to the first week of the first month of each quarter.
+    // Q1: Jan, Q2: Apr, Q3: Jul, Q4: Oct
+    const keys = ['Jan-W1', 'Apr-W1', 'Jul-W1', 'Oct-W1']
+    return JSON.stringify(keys)
+  }
+
+  if (recurrenceType === 'YEARLY') {
+    // Default to the first week of the year.
+    return JSON.stringify(['Jan-W1'])
+  }
+
+  return null
+}
 
 const state = reactive({
   taskName: '',
@@ -110,6 +146,28 @@ watch(open, (val) => {
   }
 })
 
+// Auto set the default Week Plan selection when user changes recurrence in ROUTINE (create mode).
+watch(
+  () => state.taskType,
+  (newType) => {
+    if (!isCreateMode.value) return
+    if (newType === 'ROUTINE') {
+      state.plannedWeeks = buildDefaultPlannedWeeks(state.recurrenceType)
+    } else {
+      state.plannedWeeks = null
+    }
+  }
+)
+
+watch(
+  () => state.recurrenceType,
+  (newType) => {
+    if (!isCreateMode.value) return
+    if (state.taskType !== 'ROUTINE') return
+    state.plannedWeeks = buildDefaultPlannedWeeks(newType)
+  }
+)
+
 async function onSubmit(event: FormSubmitEvent<any>) {
   loading.value = true
   try {
@@ -119,6 +177,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       delete (payload as any).recurrenceType
       delete (payload as any).recurrenceStart
       delete (payload as any).recurrenceEnd
+      payload.plannedWeeks = null
     } else {
       delete (payload as any).plannedStart
       delete (payload as any).plannedEnd
@@ -228,8 +287,11 @@ function assignToMe() {
         </div>
 
         <!-- Planned Weeks Selector (Gantt Selection) -->
-        <UFormField name="plannedWeeks">
-            <PlansPlannedWeeksSelector v-model="state.plannedWeeks" />
+        <UFormField
+          v-if="state.taskType === 'ROUTINE'"
+          name="plannedWeeks"
+        >
+          <PlansPlannedWeeksSelector v-model="state.plannedWeeks" />
         </UFormField>
 
         <div class="sticky bottom-0 flex justify-end gap-3 pt-4 pb-4 -mx-6 -mb-6 px-6 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 z-10 transition-colors">

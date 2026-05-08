@@ -107,7 +107,7 @@ function handleFilterChange(newFilters: any) {
           {{ t('common.back') }}
         </UButton>
         <h1 class="text-3xl font-bold font-heading">{{ t('reports.kpi') }}</h1>
-        <p class="text-neutral-500 font-medium">{{ t('reports.kpi_desc') }}</p>
+        <p class="text-neutral-500 font-normal">{{ t('reports.kpi_desc') }}</p>
       </div>
 
       <ExportButtons show-print :loading="loading" />
@@ -144,7 +144,7 @@ function handleFilterChange(newFilters: any) {
                                     </td>
                                     <td class="p-4 font-bold text-neutral-900 dark:text-white">{{ item.name }}</td>
                                     <td class="p-4 text-neutral-500 text-sm">{{ item.department }}</td>
-                                    <td class="p-4 text-neutral-700 dark:text-neutral-300 font-medium">{{ item.totalTasks }}</td>
+                                    <td class="p-4 text-neutral-700 dark:text-neutral-300 font-normal">{{ item.totalTasks }}</td>
                                     <td class="p-4">
                                         <div class="flex items-center gap-3 w-48">
                                             <UProgress
@@ -236,8 +236,8 @@ function handleFilterChange(newFilters: any) {
                                     </td>
                                     <td class="p-4 font-bold text-neutral-900 dark:text-white">{{ item.name }}</td>
                                     <td class="p-4 text-neutral-500 text-sm">{{ item.department }}</td>
-                                    <td class="p-4 text-neutral-700 dark:text-neutral-300 font-medium">{{ item.totalPlans }}</td>
-                                    <td class="p-4 text-neutral-700 dark:text-neutral-300 font-medium">{{ item.totalTasks }}</td>
+                                    <td class="p-4 text-neutral-700 dark:text-neutral-300 font-normal">{{ item.totalPlans }}</td>
+                                    <td class="p-4 text-neutral-700 dark:text-neutral-300 font-normal">{{ item.totalTasks }}</td>
                                     <td class="p-4">
                                         <div class="flex items-center gap-3 w-48">
                                             <UProgress

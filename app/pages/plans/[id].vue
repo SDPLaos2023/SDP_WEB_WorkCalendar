@@ -297,7 +297,7 @@ function formatTime(dateStr: string) {
       <div class="flex-1">
         <UBadge :label="t(`plans.status_${current.status.toLowerCase()}`)" color="primary" variant="solid" class="mb-2" />
         <h1 class="text-3xl font-bold font-heading">{{ current.title }}</h1>
-        <p class="text-neutral-500 font-medium whitespace-pre-wrap">
+        <p class="text-neutral-500 font-normal whitespace-pre-wrap">
           {{ current.department?.name }} • {{ t('common.year') }} {{ current.year }}
           <br v-if="current.description" />
           <span v-if="current.description" class="text-sm">{{ current.description }}</span>
@@ -485,7 +485,7 @@ function formatTime(dateStr: string) {
                              />
                            </div>
                         </div>
-                        <div v-else class="flex items-center gap-2 p-3 bg-success-50 dark:bg-success-950 text-success-700 dark:text-success-300 rounded-md text-xs font-medium">
+                        <div v-else class="flex items-center gap-2 p-3 bg-success-50 dark:bg-success-950 text-success-700 dark:text-success-300 rounded-md text-xs font-normal">
                           <UIcon name="i-heroicons-check-circle" />
                           {{ t('tasks.updates_view') }} — {{ t('tasks.completed_label') }}
                         </div>

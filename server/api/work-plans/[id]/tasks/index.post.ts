@@ -95,6 +95,7 @@ export default defineEventHandler(async (event) => {
             createData.recurrenceDay = taskData.recurrenceDay
             createData.recurrenceStart = new Date(`${taskData.recurrenceStart}T00:00:00Z`)
             createData.recurrenceEnd = new Date(`${taskData.recurrenceEnd}T00:00:00Z`)
+            createData.plannedWeeks = taskData.plannedWeeks ?? null
         }
 
         // 5. Create Task

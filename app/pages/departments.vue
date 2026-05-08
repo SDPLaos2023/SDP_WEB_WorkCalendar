@@ -225,7 +225,7 @@ function getRowItems(dept: any) {
       <div class="flex items-center justify-between mt-4">
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-500">{{ t('common.all') }}: {{ totalDepartments }}</span>
-          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-medium">({{ selection.length }})</span>
+          <span v-if="selection.length > 0" class="text-sm text-primary-500 font-normal">({{ selection.length }})</span>
         </div>
         <UPagination v-model:page="page" :total="totalDepartments" :items-per-page="pageSize" />
       </div>
