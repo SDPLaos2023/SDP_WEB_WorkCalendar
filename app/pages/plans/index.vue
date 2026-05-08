@@ -25,12 +25,14 @@ const statuses = computed(() => [
   { label: t('plans.status_closed'), value: 'CLOSED' }
 ])
 
-onMounted(() => {
-  fetchPlans(filters)
+onMounted(async () => {
+  await fetchPlans(filters)
+  await prefetchPlansProgress()
 })
 
-watch(filters, () => {
-  fetchPlans(filters)
+watch(filters, async () => {
+  await fetchPlans(filters)
+  await prefetchPlansProgress()
 }, { deep: true })
 
 const canCreate = hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER'])
@@ -39,6 +41,76 @@ const canCreate = hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER'])
 const expandedRowId = ref<string | null>(null)
 const tasksMap = ref<Record<string, PlanTask[]>>({})
 const loadingTasks = ref<Record<string, boolean>>({})
+const planCompletionPct = ref<Record<string, number>>({})
+const loadingPlanCompletion = ref<Record<string, boolean>>({})
+
+function calcAverage(nums: number[]) {
+  if (!nums.length) return 0
+  return nums.reduce((sum, n) => sum + n, 0) / nums.length
+}
+
+function calcPlanCompletionFromTasks(tasks: PlanTask[]) {
+  const projectTasks = tasks.filter(t => t.taskType === 'PROJECT')
+  const routineTasks = tasks.filter(t => t.taskType === 'ROUTINE')
+
+  const projectProgress = calcAverage(
+    projectTasks.map(t => {
+      const latestCompletion = (t as any).actuals?.[0]?.completionPct
+      const materialized = (t as any).currentCompletionPct
+      return Number(materialized ?? latestCompletion ?? 0)
+    })
+  )
+
+  const routineCompliance = calcAverage(
+    routineTasks.map(t => {
+      const materialized = (t as any).compliancePct
+      const calculated = (t as any).compliance?.compliancePct
+      return Number(materialized ?? calculated ?? 0)
+    })
+  )
+
+  if (projectTasks.length > 0 && routineTasks.length > 0) {
+    return (projectProgress + routineCompliance) / 2
+  }
+  if (projectTasks.length > 0) return projectProgress
+  if (routineTasks.length > 0) return routineCompliance
+  return 0
+}
+
+function getTaskProgressPct(task: PlanTask) {
+  // PROJECT: use latest completionPct
+  // ROUTINE: use compliancePct
+  if (task.taskType === 'PROJECT') {
+    const materialized = (task as any).currentCompletionPct
+    const latestCompletion = (task as any).actuals?.[0]?.completionPct
+    return Math.round(Number(materialized ?? latestCompletion ?? 0))
+  }
+
+  const materialized = (task as any).compliancePct
+  const calculated = (task as any).compliance?.compliancePct
+  return Math.round(Number(materialized ?? calculated ?? 0))
+}
+
+async function fetchTasksForPlan(planId: string, opts?: { silent?: boolean }) {
+  loadingTasks.value[planId] = true
+  loadingPlanCompletion.value[planId] = true
+
+  try {
+    const res = await apiFetch<any>(`/api/work-plans/${planId}/tasks`)
+    if (res?.success) {
+      tasksMap.value[planId] = res.data
+      const pct = calcPlanCompletionFromTasks(res.data as PlanTask[])
+      planCompletionPct.value[planId] = Math.round(pct)
+    } else if (!opts?.silent) {
+      toast.add({ title: t('common.error'), color: 'error' })
+    }
+  } catch (err) {
+    if (!opts?.silent) toast.add({ title: t('common.error'), color: 'error' })
+  } finally {
+    loadingTasks.value[planId] = false
+    loadingPlanCompletion.value[planId] = false
+  }
+}
 
 async function toggleExpand(planId: string) {
   // If clicking same row, toggle it off
@@ -56,18 +128,28 @@ async function toggleExpand(planId: string) {
   }
 }
 
-async function fetchTasksForPlan(planId: string) {
-  loadingTasks.value[planId] = true
-  try {
-    const res = await apiFetch<any>(`/api/work-plans/${planId}/tasks`)
-    if (res?.success) {
-      tasksMap.value[planId] = res.data
-    }
-  } catch (err) {
-    toast.add({ title: t('common.error'), color: 'error' })
-  } finally {
-    loadingTasks.value[planId] = false
-  }
+async function prefetchPlansProgress() {
+  if (!plans.value?.length) return
+
+  // Clear caches so UI doesn't show stale progress when filters change.
+  // (tasksMap is still used for expanded rows; keep it to avoid refetch there.)
+  const currentPlanIds = new Set(plans.value.map(p => p.id))
+  Object.keys(planCompletionPct.value).forEach(id => {
+    if (!currentPlanIds.has(id)) delete planCompletionPct.value[id]
+  })
+  Object.keys(loadingPlanCompletion.value).forEach(id => {
+    if (!currentPlanIds.has(id)) delete loadingPlanCompletion.value[id]
+  })
+
+  plans.value.forEach(p => {
+    delete planCompletionPct.value[p.id]
+    loadingPlanCompletion.value[p.id] = true
+  })
+
+  // Prefetch only visible plans (current page).
+  await Promise.all(
+    plans.value.map(p => fetchTasksForPlan(p.id, { silent: true }))
+  )
 }
 
 // ─── UI Helpers ─────────────────────────────────────────────────────────────
@@ -178,6 +260,9 @@ async function handleDelete() {
   if (!planToDelete.value) return
   try {
     await remove(planToDelete.value)
+    const deletedId = planToDelete.value
+    delete planCompletionPct.value[deletedId]
+    delete loadingPlanCompletion.value[deletedId]
     toast.add({ title: t('common.success'), color: 'success' })
     isDeleteModalOpen.value = false
   } catch (err) {
@@ -191,12 +276,12 @@ async function handleDelete() {
     <PlansWorkPlanFormModal
       v-model:open="isEditModalOpen"
       :plan="selectedPlan"
-      @success="fetchPlans(filters)"
+      @success="async () => { await fetchPlans(filters); await prefetchPlansProgress() }"
     />
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold font-heading">{{ t('plans.title') }}</h1>
-        <p class="text-neutral-500 font-medium">{{ t('plans.subtitle') }}</p>
+        <p class="text-neutral-500 font-normal">{{ t('plans.subtitle') }}</p>
       </div>
       <UButton v-if="canCreate" to="/plans/create" icon="i-heroicons-plus" color="primary" class="font-bold">
         {{ t('plans.new') }}
@@ -253,7 +338,19 @@ async function handleDelete() {
                   <UBadge :label="plan._count?.tasks || 0" color="neutral" variant="soft" size="sm" />
                 </td>
                 <td class="p-4">
-                   <UProgress :value="Math.floor(Math.random() * 100)" class="w-20" />
+                  <div class="flex items-center gap-3">
+                    <UProgress
+                      :value="planCompletionPct[plan.id] ?? 0"
+                      class="w-20"
+                      :ui="{ strategy: 'rounded' }"
+                    />
+                    <span class="text-xs font-bold text-neutral-700 dark:text-neutral-200" v-if="typeof planCompletionPct[plan.id] === 'number'">
+                      {{ planCompletionPct[plan.id] }}%
+                    </span>
+                    <span class="text-xs font-bold text-neutral-400" v-else>
+                      —
+                    </span>
+                  </div>
                 </td>
                 <td class="p-4">
                   <UBadge
@@ -300,7 +397,7 @@ async function handleDelete() {
                           <div class="w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
                             <UIcon name="i-heroicons-inbox" class="text-xl text-neutral-400" />
                           </div>
-                          <p class="text-sm text-neutral-500 font-medium">{{ t('tasks.no_tasks') }}</p>
+                          <p class="text-sm text-neutral-500 font-normal">{{ t('tasks.no_tasks') }}</p>
                         </div>
 
                         <div v-else class="overflow-x-auto">
@@ -369,7 +466,7 @@ async function handleDelete() {
                                       size="2xs"
                                       :ui="{ rounded: 'rounded-lg' }"
                                     />
-                                    <span class="text-neutral-600 dark:text-neutral-300 font-medium whitespace-nowrap">{{ task.assignedTo ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}` : '-' }}</span>
+                                    <span class="text-neutral-600 dark:text-neutral-300 font-normal whitespace-nowrap">{{ task.assignedTo ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}` : '-' }}</span>
                                   </div>
                                 </td>
                                 <td class="px-4 py-4 text-right">
@@ -380,8 +477,21 @@ async function handleDelete() {
                                         <span>→</span>
                                         <span>{{ formatDate(task.plannedEnd || task.recurrenceEnd) }}</span>
                                       </div>
-                                      <div class="w-20">
-                                        <UProgress :value="Math.random() * 100" size="2xs" color="primary" />
+                                      <div class="flex items-center gap-2">
+                                        <div class="w-20">
+                                          <UProgress
+                                            :value="getTaskProgressPct(task)"
+                                            size="2xs"
+                                            color="primary"
+                                          />
+                                        </div>
+                                        <UBadge
+                                          :label="`${getTaskProgressPct(task)}%`"
+                                          color="primary"
+                                          variant="soft"
+                                          size="sm"
+                                          class="font-bold"
+                                        />
                                       </div>
                                     </div>
                                     <UButton icon="i-heroicons-calendar-days" color="primary" variant="subtle" size="sm" @click="openCalendar(task)" />
@@ -423,7 +533,7 @@ async function handleDelete() {
       <template #content>
         <div class="p-6">
             <h3 class="text-xl font-bold mb-2">{{ t('plans.confirm_delete') }}</h3>
-            <p class="text-neutral-500 mb-6 font-medium">{{ t('plans.delete_warning') }}</p>
+            <p class="text-neutral-500 mb-6 font-normal">{{ t('plans.delete_warning') }}</p>
             <div class="flex justify-end gap-3">
               <UButton color="neutral" variant="ghost" @click="isDeleteModalOpen = false">{{ t('common.cancel') }}</UButton>
               <UButton color="error" class="font-bold" @click="handleDelete">{{ t('common.delete') }}</UButton>

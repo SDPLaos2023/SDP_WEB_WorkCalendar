@@ -60,7 +60,7 @@ const reports = computed(() => [
         <span class="text-sm font-bold uppercase tracking-wider">{{ t('navigation.reports') }}</span>
       </div>
       <h1 class="text-3xl font-bold font-heading">{{ t('reports.hub') }}</h1>
-      <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.hub_desc') }}</p>
+      <p class="text-neutral-500 dark:text-neutral-400 font-normal">{{ t('reports.hub_desc') }}</p>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

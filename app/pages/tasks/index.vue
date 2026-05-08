@@ -94,7 +94,7 @@ const getTaskComplianceColor = (pct: number) => {
     <header class="flex justify-between items-end">
       <div>
         <h1 class="text-3xl font-bold font-heading">{{ t('tasks.my_tasks') }}</h1>
-        <p class="text-neutral-500 font-medium">{{ t('tasks.my_tasks_sub') }}</p>
+        <p class="text-neutral-500 font-normal">{{ t('tasks.my_tasks_sub') }}</p>
       </div>
       <UButton icon="i-heroicons-arrow-path" color="neutral" variant="ghost" :loading="loading" @click="fetchMyTasks">{{ t('common.refresh') }}</UButton>
     </header>
@@ -132,7 +132,7 @@ const getTaskComplianceColor = (pct: number) => {
                              <div class="w-24 bg-gray-200 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
                                 <div class="h-full" :class="`bg-${getTaskComplianceColor((task as any).compliance.compliancePct)}-500`" :style="`width: ${(task as any).compliance.compliancePct}%`" />
                              </div>
-                             <span class="text-xs font-medium" :class="`text-${getTaskComplianceColor((task as any).compliance.compliancePct)}-600`">{{ (task as any).compliance.compliancePct }}% {{ t('tasks.compliance') }}</span>
+                             <span class="text-xs font-normal" :class="`text-${getTaskComplianceColor((task as any).compliance.compliancePct)}-600`">{{ (task as any).compliance.compliancePct }}% {{ t('tasks.compliance') }}</span>
                         </div>
                     </div>
                     <UButton icon="i-heroicons-pencil-square" color="primary" variant="soft" @click.stop="navigateTo(`/tasks/${task.id}`)">{{ t('tasks.report_progress') }}</UButton>

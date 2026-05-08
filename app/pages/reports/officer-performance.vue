@@ -97,7 +97,7 @@ const columns = computed<TableColumn<any>[]>(() => [
           {{ t('common.back') }}
         </UButton>
         <h1 class="text-2xl font-bold font-heading">{{ t('reports.officer_performance') }}</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 font-medium">{{ t('reports.officer_performance_desc') }}</p>
+        <p class="text-neutral-500 dark:text-neutral-400 font-normal">{{ t('reports.officer_performance_desc') }}</p>
       </div>
 
       <ExportButtons
@@ -125,7 +125,7 @@ const columns = computed<TableColumn<any>[]>(() => [
         </UTable>
     </UCard>
 
-    <div v-if="error" class="bg-error-50 dark:bg-error-900/10 border border-error-500/20 text-error-600 dark:text-error-400 p-4 rounded-xl text-sm font-medium">
+    <div v-if="error" class="bg-error-50 dark:bg-error-900/10 border border-error-500/20 text-error-600 dark:text-error-400 p-4 rounded-xl text-sm font-normal">
         {{ error }}
     </div>
   </div>

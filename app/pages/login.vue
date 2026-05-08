@@ -99,7 +99,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         <UIcon name="i-heroicons-shield-exclamation" class="w-5 h-5 flex-shrink-0" />
         <div class="space-y-1">
           <p class="uppercase tracking-widest text-[10px]">Error</p>
-          <span class="font-medium opacity-80 leading-relaxed">{{ error }}</span>
+          <span class="font-normal opacity-80 leading-relaxed">{{ error }}</span>
         </div>
       </div>
 

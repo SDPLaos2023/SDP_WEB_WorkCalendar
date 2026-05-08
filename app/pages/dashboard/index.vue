@@ -68,7 +68,7 @@ const projectColumns: TableColumn<any>[] = [
       if (status === 'in_progress') color = 'primary'
       if (status === 'completed' || status === 'done') color = 'success'
       if (status === 'cancelled') color = 'error'
-      
+
       return h(UBadge, {
         label: t(`tasks.status_${status}`),
         color,
@@ -186,9 +186,9 @@ const trendEndDate = computed(() => {
                         <span class="font-bold text-neutral-500">{{ t(`tasks.status_${(status as string).toLowerCase()}`) }}</span>
                         <span class="font-bold">{{ count }}</span>
                     </div>
-                    <UProgress 
-                        :value="count" 
-                        :max="(summary?.totalTasks.project || 0) + (summary?.totalTasks.routine || 0)" 
+                    <UProgress
+                        :value="count"
+                        :max="(summary?.totalTasks.project || 0) + (summary?.totalTasks.routine || 0)"
                         :color="status === 'DONE' || status === 'COMPLETED' ? 'success' : status === 'IN_PROGRESS' ? 'primary' : status === 'CANCELLED' ? 'error' : 'neutral'"
                         size="sm"
                     />
@@ -230,9 +230,9 @@ const trendEndDate = computed(() => {
                 </div>
             </template>
             <div class="h-48 flex items-end justify-between gap-1 mt-4">
-                <div 
-                    v-for="day in summary?.trend" 
-                    :key="day.date" 
+                <div
+                    v-for="day in summary?.trend"
+                    :key="day.date"
                     class="flex-1 bg-primary/20 dark:bg-primary/10 rounded-t-sm relative group"
                     :style="{ height: `${Math.max((day.count / maxTrendValue) * 100, 5)}%` }"
                 >
