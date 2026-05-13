@@ -81,9 +81,20 @@ const commonColumns = computed<TableColumn<any>[]>(() => [
 const projectColumns = computed<TableColumn<any>[]>(() => [
   ...commonColumns.value,
   {
-    accessorKey: 'id',
+    accessorKey: 'weight',
+    header: t('tasks.weight'),
+    cell: ({ row }: any) => h('span', { class: 'font-bold' }, `${Number(row.getValue('weight') || 0)}%`)
+  },
+  {
+    accessorKey: 'currentCompletionPct',
     header: t('tasks.completion'),
-    cell: () => h(UProgress, { value: 65, class: 'w-32' })
+    cell: ({ row }: any) => {
+      const pct = Number(row.original.currentCompletionPct || 0)
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h(UProgress, { value: pct, class: 'w-24', color: pct >= 100 ? 'success' : 'primary' }),
+        h('span', { class: 'text-xs font-bold' }, `${pct}%`)
+      ])
+    }
   },
   {
     accessorKey: 'actions',
@@ -133,6 +144,11 @@ const projectColumns = computed<TableColumn<any>[]>(() => [
 
 const routineColumns = computed<TableColumn<any>[]>(() => [
   ...commonColumns.value,
+  {
+    accessorKey: 'weight',
+    header: t('tasks.weight'),
+    cell: ({ row }: any) => h('span', { class: 'font-bold' }, `${Number(row.getValue('weight') || 0)}%`)
+  },
   {
     accessorKey: 'compliance.compliancePct',
     header: t('tasks.compliance'),
@@ -281,6 +297,38 @@ function formatTime(dateStr: string) {
   if (isNaN(date.getTime())) return 'N/A'
   return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
 }
+
+const planWeightedProgress = computed(() => {
+  if (!tasks.value.length) return 0
+  let totalScore = 0
+  let totalWeight = 0
+  let simpleSum = 0
+  
+  tasks.value.forEach(t => {
+    const w = Number(t.weight || 0)
+    const score = t.taskType === 'PROJECT' ? Number(t.currentCompletionPct || 0) : Number(t.compliancePct || 0)
+    totalScore += score * w
+    totalWeight += w
+    simpleSum += score
+  })
+  
+  if (totalWeight > 0) {
+    return Math.round((totalScore / totalWeight) * 100) / 100
+  }
+  return Math.round((simpleSum / tasks.value.length) * 100) / 100
+})
+
+const totalWeight = computed(() => {
+  return Math.round(tasks.value.reduce((sum, t) => sum + Number(t.weight || 0), 0) * 100) / 100
+})
+
+const remainingWeight = computed(() => {
+  return Math.round((100 - totalWeight.value) * 100) / 100
+})
+
+const isWeightValid = computed(() => {
+  return totalWeight.value >= 99.99 && totalWeight.value <= 100.01
+})
 </script>
 
 <template>
@@ -326,18 +374,67 @@ function formatTime(dateStr: string) {
           </UButton>
           <span v-else-if="!current.supervisors?.length" class="text-sm italic text-neutral-400">{{ t('common.none') }}</span>
         </div>
+
+        <!-- Plan Progress & Weight Budget -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+          <!-- Overall Progress -->
+          <div class="p-4 border rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-xs font-bold uppercase text-neutral-500">{{ t('plans.overall_progress') }}</span>
+              <span class="text-lg font-bold text-primary">{{ planWeightedProgress }}%</span>
+            </div>
+            <UProgress :value="planWeightedProgress" size="lg" color="primary" />
+          </div>
+
+          <!-- Weight Budget -->
+          <div 
+            class="p-4 border rounded-xl transition-colors"
+            :class="isWeightValid 
+              ? 'bg-success-50 dark:bg-success-950 border-success-200 dark:border-success-800'
+              : totalWeight.valueOf() > 100 
+                ? 'bg-error-50 dark:bg-error-950 border-error-200 dark:border-error-800' 
+                : 'bg-warning-50 dark:bg-warning-950 border-warning-200 dark:border-warning-800'"
+          >
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-xs font-bold uppercase text-neutral-500">{{ t('plans.weight_budget') }}</span>
+              <span 
+                class="text-lg font-bold"
+                :class="isWeightValid ? 'text-success-600' : totalWeight > 100 ? 'text-error-600' : 'text-warning-600'"
+              >
+                {{ totalWeight }} / 100
+              </span>
+            </div>
+            <UProgress 
+              :value="Math.min(totalWeight, 100)" 
+              size="lg" 
+              :color="isWeightValid ? 'success' : totalWeight > 100 ? 'error' : 'warning'" 
+            />
+            <p class="text-[11px] mt-2" :class="isWeightValid ? 'text-success-600' : 'text-warning-600'">
+              <UIcon :name="isWeightValid ? 'i-heroicons-check-circle' : 'i-heroicons-exclamation-triangle'" class="inline-block mr-1" />
+              {{ isWeightValid ? t('plans.weight_complete') : t('plans.weight_remaining', { n: remainingWeight }) }}
+            </p>
+          </div>
+        </div>
       </div>
       <div class="flex gap-2">
          <!-- Status Transitions -->
          <UButton
             v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN']) && current.status === 'DRAFT'"
             icon="i-heroicons-check-circle"
-            color="success"
+            :color="isWeightValid ? 'success' : 'neutral'"
+            :disabled="!isWeightValid"
             :loading="isStatusLoading"
             @click="handleStatusChange('ACTIVE')"
          >
             {{ t('plans.approve') }}
          </UButton>
+         <UBadge
+            v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN']) && current.status === 'DRAFT' && !isWeightValid && tasks.length > 0"
+            :label="t('plans.weight_must_100')"
+            color="warning"
+            variant="subtle"
+            class="self-center"
+         />
          <UButton
             v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN']) && current.status === 'ACTIVE'"
             icon="i-heroicons-lock-closed"
@@ -428,6 +525,10 @@ function formatTime(dateStr: string) {
                     <p class="font-bold">{{ selectedTask.priority }}</p>
                 </div>
                 <div class="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md">
+                    <p class="text-xs text-neutral-500 uppercase font-bold">{{ t('tasks.weight') }}</p>
+                    <p class="font-bold">{{ Number(selectedTask.weight || 0) }}%</p>
+                </div>
+                <div class="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md col-span-2">
                     <p class="text-xs text-neutral-500 uppercase font-bold">{{ t('tasks.assign_to') }}</p>
                     <p class="font-bold">{{ selectedTask.assignedTo?.firstName }} {{ selectedTask.assignedTo?.lastName }}</p>
                 </div>
@@ -504,6 +605,11 @@ function formatTime(dateStr: string) {
                                   <UBadge :label="t(`tasks.status_${log.status.toLowerCase()}`)" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : 'warning'" class="text-[10px]" />
                                 </div>
                                 <p v-if="log.note" class="text-[10px] text-neutral-500 italic">{{ log.note }}</p>
+                                <div v-if="log.attachmentUrl" class="mt-2">
+                                  <UButton :to="log.attachmentUrl" target="_blank" size="2xs" color="neutral" variant="soft" icon="i-heroicons-paper-clip">
+                                    Attachment
+                                  </UButton>
+                                </div>
                               </div>
                            </div>
                            <p v-else class="text-center py-6 text-xs text-neutral-400 italic">No updates logged yet.</p>
@@ -556,6 +662,11 @@ function formatTime(dateStr: string) {
                         <UIcon name="i-heroicons-chat-bubble-bottom-center-text" class="inline-block mr-1 opacity-50" />
                         {{ log.note }}
                       </p>
+                    </div>
+                    <div v-if="log.attachmentUrl" class="mt-3 flex">
+                      <UButton :to="log.attachmentUrl" target="_blank" size="xs" color="primary" variant="soft" icon="i-heroicons-paper-clip">
+                        View Attachment
+                      </UButton>
                     </div>
 
                     <div class="flex justify-end mt-3">

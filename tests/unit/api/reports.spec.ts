@@ -425,4 +425,100 @@ describe('Report Module API Handlers', () => {
             )
         })
     })
+
+    describe('GET /api/reports/kpi', () => {
+        let handler: any
+
+        beforeEach(async () => {
+            vi.clearAllMocks()
+            const module = await import('../../../server/api/reports/kpi.get')
+            handler = module.default
+        })
+
+        it('TC-RPT-17: should evaluate work plan monthly KPI with 30 target units', async () => {
+            const { getUser } = await import('../../../server/utils/auth-helpers')
+            vi.mocked(getUser).mockReturnValue({ id: 'm-1', role: 'MANAGER', companyId: 'c-1', departmentId: 'd-1' } as any)
+            vi.mocked(getQuery).mockReturnValue({ year: '2024', month: '1', period: 'MONTHLY' })
+            vi.mocked(prisma.workPlan.findMany).mockResolvedValue([
+                mockPlan({
+                    id: 'plan-kpi-1',
+                    title: 'KPI Plan',
+                    department: { name: 'IT Department' },
+                    tasks: [
+                        {
+                            id: 't-1',
+                            taskName: 'Submit daily report',
+                            taskType: 'PROJECT',
+                            status: 'IN_PROGRESS',
+                            recurrenceType: null,
+                            recurrenceStart: null,
+                            recurrenceEnd: null,
+                            recurrenceDay: null,
+                            actuals: [
+                                { actualDate: new Date('2024-01-01'), completionPct: 50 },
+                                { actualDate: new Date('2024-01-02'), completionPct: 40 }
+                            ]
+                        }
+                    ]
+                })
+            ] as any)
+
+            const result = await handler(mockEvent())
+
+            expect(result.success).toBe(true)
+            expect(result.data[0]).toMatchObject({
+                planName: 'KPI Plan',
+                completedUnits: 2,
+                targetUnits: 30,
+                unitLabel: 'days',
+                kpiPct: 6.67
+            })
+            expect(prisma.workPlan.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: expect.objectContaining({ departmentId: 'd-1' })
+                })
+            )
+        })
+
+        it('TC-RPT-18: should evaluate work plan yearly KPI with 12 target units', async () => {
+            const { getUser } = await import('../../../server/utils/auth-helpers')
+            vi.mocked(getUser).mockReturnValue({ id: 'm-1', role: 'MANAGER', companyId: 'c-1', departmentId: 'd-1' } as any)
+            vi.mocked(getQuery).mockReturnValue({ year: '2024', period: 'YEARLY' })
+            vi.mocked(prisma.workPlan.findMany).mockResolvedValue([
+                mockPlan({
+                    id: 'plan-kpi-2',
+                    title: 'Annual KPI Plan',
+                    department: { name: 'IT Department' },
+                    tasks: [
+                        {
+                            id: 't-1',
+                            taskName: 'Monthly KPI evidence',
+                            taskType: 'PROJECT',
+                            status: 'IN_PROGRESS',
+                            recurrenceType: null,
+                            recurrenceStart: null,
+                            recurrenceEnd: null,
+                            recurrenceDay: null,
+                            actuals: [
+                                { actualDate: new Date('2024-01-15'), completionPct: 80 },
+                                { actualDate: new Date('2024-02-15'), completionPct: 70 },
+                                { actualDate: new Date('2024-03-15'), completionPct: 60 }
+                            ]
+                        }
+                    ]
+                })
+            ] as any)
+
+            const result = await handler(mockEvent())
+
+            expect(result.success).toBe(true)
+            expect(result.data[0]).toMatchObject({
+                planName: 'Annual KPI Plan',
+                completedUnits: 3,
+                targetUnits: 12,
+                unitLabel: 'months',
+                kpiPct: 25
+            })
+        })
+    })
 })

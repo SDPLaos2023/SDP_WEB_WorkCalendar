@@ -238,6 +238,12 @@ onMounted(() => {
                       <div v-if="actual.note" class="text-xs text-neutral-600 dark:text-neutral-400 bg-white dark:bg-black/20 p-2 rounded border border-neutral-100 dark:border-neutral-800/50 italic">
                         "{{ actual.note }}"
                       </div>
+
+                      <div v-if="actual.attachmentUrl" class="mt-2 flex">
+                        <UButton :to="actual.attachmentUrl" target="_blank" size="xs" color="primary" variant="soft" icon="i-heroicons-paper-clip">
+                          View Attachment
+                        </UButton>
+                      </div>
                       
                       <div class="mt-2 flex items-center justify-between text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
                         <span>{{ t('tasks.completion') }}</span>

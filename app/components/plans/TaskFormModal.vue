@@ -58,13 +58,14 @@ const state = reactive({
   description: '',
   taskType: 'PROJECT' as 'PROJECT' | 'ROUTINE',
   priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT',
+  weight: 0,
   assignedToId: '',
   plannedStart: '',
   plannedEnd: '',
   recurrenceType: 'DAILY' as 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY',
   recurrenceStart: '',
   recurrenceEnd: '',
-  plannedWeeks: null as string | null
+  plannedWeeks: null as string | null,
 })
 
 const loading = ref(false)
@@ -92,7 +93,7 @@ async function fetchOfficers() {
          fullName: `${u.firstName} ${u.lastName} (${u.role})`
       }))
 
-      if (user.value && allowedRoles.includes(user.value.role) && user.value.departmentId === plan.departmentId) {
+      if (user.value) {
         const meIndex = fetched.findIndex((u: any) => u.id === user.value?.id)
         if (meIndex >= 0) {
           fetched[meIndex].fullName += ' (Me)'
@@ -121,11 +122,11 @@ watch(open, (val) => {
       state.description = props.task.description || ''
       state.taskType = props.task.taskType
       state.priority = props.task.priority
+      state.weight = Number(props.task.weight) || 0
       state.assignedToId = props.task.assignedToId
       state.plannedStart = props.task.plannedStart ? props.task.plannedStart.split('T')[0] : ''
       state.plannedEnd = props.task.plannedEnd ? props.task.plannedEnd.split('T')[0] : ''
       state.recurrenceType = props.task.recurrenceType || 'DAILY'
-      state.recurrenceStart = props.task.recurrenceStart ? props.task.recurrenceStart.split('T')[0] : ''
       state.recurrenceStart = props.task.recurrenceStart ? props.task.recurrenceStart.split('T')[0] : ''
       state.recurrenceEnd = props.task.recurrenceEnd ? props.task.recurrenceEnd.split('T')[0] : ''
       state.plannedWeeks = props.task.plannedWeeks || null
@@ -135,6 +136,7 @@ watch(open, (val) => {
       state.description = ''
       state.taskType = 'PROJECT'
       state.priority = 'MEDIUM'
+      state.weight = 0
       state.assignedToId = ''
       state.plannedStart = ''
       state.plannedEnd = ''
@@ -220,12 +222,16 @@ function assignToMe() {
       <UForm :schema="isEditMode ? updatePlanTaskSchema : createPlanTaskSchema" :state="state" @submit="onSubmit" class="p-6 space-y-4">
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField :label="t('tasks.name')" name="taskName">
+          <UFormField :label="t('tasks.name')" name="taskName" class="col-span-2">
             <UInput v-model="state.taskName" class="w-full" />
           </UFormField>
 
           <UFormField :label="t('common.priority')" name="priority">
             <USelect v-model="state.priority" :items="['LOW', 'MEDIUM', 'HIGH', 'URGENT']" class="w-full" />
+          </UFormField>
+
+          <UFormField :label="t('tasks.weight')" name="weight">
+            <UInput v-model.number="state.weight" type="number" step="0.01" min="0" max="100" trailing-icon="i-heroicons-percent-badge" class="w-full" />
           </UFormField>
         </div>
 

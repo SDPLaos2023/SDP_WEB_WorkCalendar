@@ -154,6 +154,7 @@ model PlanTask {
   taskType    String  @default("PROJECT") @map("task_type") @db.NVarChar(50)
   priority    String  @default("MEDIUM") @db.NVarChar(50)
   status      String  @default("PENDING") @db.NVarChar(50)
+  weight      Decimal @default(0.00) @db.Decimal(5, 2)
 
   // ── Project task fields ──
   // used when taskType = PROJECT
@@ -183,6 +184,7 @@ model PlanTask {
   assignedTo User?        @relation("TaskAssignedTo", fields: [assignedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdBy  User         @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   actuals    TaskActual[]
+  subItems   PlanTaskSubItem[]
 
   @@index([workPlanId, deletedAt])
   @@index([assignedToId, deletedAt])
@@ -220,6 +222,26 @@ model TaskActual {
 
   @@index([planTaskId, actualDate])
   @@map("tb_task_actuals")
+}
+
+// ──────────────────────────────────────────
+//  TASK SUB-ITEM (For calculated progress)
+// ──────────────────────────────────────────
+
+model PlanTaskSubItem {
+  id          String   @id @default(uuid()) @db.NVarChar(36)
+  planTaskId  String   @map("plan_task_id") @db.NVarChar(36)
+  name        String   @db.NVarChar(500)
+  weight      Decimal  @db.Decimal(5, 2)
+  isCompleted Boolean  @default(false) @map("is_completed")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  planTask PlanTask @relation(fields: [planTaskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([planTaskId])
+  @@map("tb_plan_task_subitems")
 }
 
 // ──────────────────────────────────────────

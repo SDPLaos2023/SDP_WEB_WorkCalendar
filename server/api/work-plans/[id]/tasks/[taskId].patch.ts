@@ -1,6 +1,7 @@
 import { prisma } from '../../../../utils/prisma'
 import { requireRole } from '../../../../utils/auth-helpers'
 import { logAudit } from '../../../../utils/audit'
+import { updateTaskMaterializedStats } from '../../../../utils/materialized-stats'
 import { updatePlanTaskSchema } from '../../../../../shared/schemas/plan-task.schema'
 
 export default defineEventHandler(async (event) => {
@@ -84,6 +85,9 @@ export default defineEventHandler(async (event) => {
             oldValues: oldTask,
             newValues: updatedTask
         })
+
+        // 7. Update Materialized Stats in case recurrence rules changed
+        await updateTaskMaterializedStats(updatedTask.id)
 
         return {
             success: true,

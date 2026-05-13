@@ -1,12 +1,15 @@
 import { z } from 'zod'
 
+const emptyToNull = (val: any) => (val === '' ? null : val)
+
 const baseTaskSchema = z.object({
     taskName: z.string().min(2, 'Task name must be at least 2 characters').max(500),
     description: z.string().optional().nullable(),
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
-    assignedToId: z.string().uuid().optional().nullable(),
-    supervisorId: z.string().uuid().optional().nullable(),
-    plannedWeeks: z.string().optional().nullable()
+    weight: z.number().min(0).max(100).default(0),
+    assignedToId: z.preprocess(emptyToNull, z.string().uuid().optional().nullable()),
+    supervisorId: z.preprocess(emptyToNull, z.string().uuid().optional().nullable()),
+    plannedWeeks: z.string().optional().nullable(),
 })
 
 export const projectTaskSchema = baseTaskSchema.extend({
@@ -35,8 +38,9 @@ export const updatePlanTaskSchema = z.object({
     taskName: z.string().min(2).max(500).optional(),
     description: z.string().optional().nullable(),
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
-    assignedToId: z.string().uuid().optional().nullable(),
-    supervisorId: z.string().uuid().optional().nullable(),
+    weight: z.number().min(0).max(100).optional(),
+    assignedToId: z.preprocess(emptyToNull, z.string().uuid().optional().nullable()),
+    supervisorId: z.preprocess(emptyToNull, z.string().uuid().optional().nullable()),
     plannedStart: z.string().optional(),
     plannedEnd: z.string().optional(),
     recurrenceType: z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY']).optional(),
@@ -44,7 +48,7 @@ export const updatePlanTaskSchema = z.object({
     recurrenceStart: z.string().optional(),
     recurrenceEnd: z.string().optional(),
     status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
-    plannedWeeks: z.string().optional().nullable()
+    plannedWeeks: z.string().optional().nullable(),
 })
 
 export type CreatePlanTaskInput = z.infer<typeof createPlanTaskSchema>

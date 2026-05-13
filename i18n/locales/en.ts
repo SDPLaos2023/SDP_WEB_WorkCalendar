@@ -42,7 +42,12 @@ export default {
       week: 'Week',
       month: 'Month',
       quarter: 'Quarter',
-      more: 'More'
+      more: 'More',
+      months: {
+        jan: 'January', feb: 'February', mar: 'March', apr: 'April',
+        may: 'May', jun: 'June', jul: 'July', aug: 'August',
+        sep: 'September', oct: 'October', nov: 'November', dec: 'December'
+      }
     },
     auth: {
       login: 'Login',
@@ -107,7 +112,14 @@ export default {
       no_tasks_in_plan: 'No Tasks in This Plan',
       no_tasks_hint: 'Click "Add Task" to create a Project or Routine task and assign it to an Officer.',
       no_tasks_officer_hint: 'You have not been assigned any tasks by your Supervisor yet.',
-      assign: 'Assign'
+      assign: 'Assign',
+      overall_progress: 'Overall Plan Progress',
+      weight_budget: 'Weight Budget',
+      weight_complete: 'All weights are properly allocated',
+      weight_remaining: 'Remaining: {n}% — must total 100 to activate',
+      weight_must_100: 'Total weight must equal 100% to activate',
+      error_no_tasks: 'Cannot activate a plan with no tasks',
+      error_weight_not_100: 'Total task weight must equal 100% before activating the plan'
     },
     tasks: {
       title: 'Tasks',
@@ -165,6 +177,7 @@ export default {
       status: 'Status',
       note: 'Note',
       attachment_url: 'Attachment URL',
+      weight: 'Weight',
     },
     reports: {
       hub: 'Reports Hub',
@@ -187,10 +200,21 @@ export default {
       export_csv: 'Export CSV',
       print: 'Print',
       filter: 'Filter',
-      plan: 'Plan',
       actual: 'Act',
       expected: 'Exp',
-      missed_dates: 'Missed Dates'
+      missed_dates: 'Missed Dates',
+      period_monthly: 'Monthly',
+      period_yearly: 'Yearly',
+      evaluation_period: 'Evaluation Period',
+      work_plan: 'Work Plan',
+      achieved_target: 'Achieved / Target',
+      kpi_score: 'KPI Score',
+      average_performance: 'Average Performance',
+      days: 'Days',
+      months_unit: 'Months',
+      tasks_in_plan: 'Tasks in Plan',
+      logged_in_period: 'Logged {count} items in this period',
+      achievement: 'Achievement'
     },
     management: {
       company: 'Company',

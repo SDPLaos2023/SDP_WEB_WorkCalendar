@@ -79,48 +79,69 @@ export default defineEventHandler(async (event) => {
             CANCELLED: statusCountRaw.find(s => s.status === 'CANCELLED')?._count._all || 0
         }
 
-        // Project Average Completion
-        let totalProjectPct = 0
+        // Project Average Completion (Weighted by task weight)
+        let totalProjectScore = 0
+        let totalProjectWeight = 0
+        let simpleProjectPctSum = 0
+        
         projects.forEach(p => {
-            totalProjectPct += Number(p.currentCompletionPct || 0)
+            const w = Number(p.weight || 0)
+            const c = Number(p.currentCompletionPct || 0)
+            totalProjectScore += c * w
+            totalProjectWeight += w
+            simpleProjectPctSum += c
         })
-        const projectAvgCompletion = projects.length > 0
-            ? Math.round((totalProjectPct / projects.length) * 100) / 100
-            : 0
 
-        // Routine Compliance Average
-        let totalCompliancePct = 0
+        const projectAvgCompletion = totalProjectWeight > 0
+            ? Math.round((totalProjectScore / totalProjectWeight) * 100) / 100
+            : (projects.length > 0 ? Math.round((simpleProjectPctSum / projects.length) * 100) / 100 : 0)
+
+        // Routine Compliance Average (Weighted by task weight)
+        let totalRoutineScore = 0
+        let totalRoutineWeight = 0
+        let simpleRoutinePctSum = 0
         let missedTodayCount = 0
         const todayStr = new Date().toLocaleDateString('en-CA')
 
         routines.forEach(r => {
-            totalCompliancePct += Number(r.compliancePct || 0)
+            const w = Number(r.weight || 0)
+            const c = Number(r.compliancePct || 0)
+            totalRoutineScore += c * w
+            totalRoutineWeight += w
+            simpleRoutinePctSum += c
 
             const hasUpdateToday = r.actuals.some(a =>
                 new Date(a.actualDate).toISOString().split('T')[0] === todayStr
             )
             if (!hasUpdateToday) missedTodayCount++
         })
-        const routineComplianceAvg = routines.length > 0
-            ? Math.round((totalCompliancePct / routines.length) * 100) / 100
-            : 0
+        const routineComplianceAvg = totalRoutineWeight > 0
+            ? Math.round((totalRoutineScore / totalRoutineWeight) * 100) / 100
+            : (routines.length > 0 ? Math.round((simpleRoutinePctSum / routines.length) * 100) / 100 : 0)
 
-        // Department Performance Correlation
-        const deptPerf = new Map<string, { name: string, total: number, sum: number }>()
+        // Department Performance Correlation (Weighted by task weight)
+        const deptPerf = new Map<string, { name: string, totalWeight: number, weightedScore: number, simpleSum: number, count: number }>()
         tasks.forEach(t => {
             const d = t.workPlan.department
-            if (!deptPerf.has(d.id)) deptPerf.set(d.id, { name: d.name, total: 0, sum: 0 })
+            if (!deptPerf.has(d.id)) deptPerf.set(d.id, { name: d.name, totalWeight: 0, weightedScore: 0, simpleSum: 0, count: 0 })
             const stat = deptPerf.get(d.id)!
-            stat.total++
-            if (t.taskType === 'PROJECT') {
-                stat.sum += Number(t.currentCompletionPct || 0)
-            } else {
-                stat.sum += Number(t.compliancePct || 0)
-            }
+            
+            const w = Number(t.weight || 0)
+            const score = t.taskType === 'PROJECT' ? Number(t.currentCompletionPct || 0) : Number(t.compliancePct || 0)
+            
+            stat.weightedScore += score * w
+            stat.totalWeight += w
+            stat.simpleSum += score
+            stat.count++
         })
 
         const topDepartments = Array.from(deptPerf.values())
-            .map(d => ({ name: d.name, score: Math.round(d.sum / (d.total || 1)) }))
+            .map(d => ({ 
+                name: d.name, 
+                score: d.totalWeight > 0 
+                    ? Math.round(d.weightedScore / d.totalWeight) 
+                    : Math.round(d.simpleSum / (d.count || 1)) 
+            }))
             .sort((a, b) => b.score - a.score)
             .slice(0, 5)
 

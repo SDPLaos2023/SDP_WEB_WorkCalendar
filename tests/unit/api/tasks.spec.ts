@@ -64,7 +64,7 @@ describe('Task and Actual API Handlers', () => {
             const { requireRole } = await import('../../../server/utils/auth-helpers')
             vi.mocked(requireRole).mockReturnValue(sessionUser)
 
-            const workPlan = { id: 'p-1', departmentId: 'd-1', supervisors: [{ supervisorId: 's-1' }] }
+            const workPlan = { id: 'p-1', departmentId: 'd-1', department: { companyId: 'c-1' }, supervisors: [{ supervisorId: 's-1' }] }
             vi.mocked(prisma.workPlan.findFirst).mockResolvedValue(workPlan as any)
 
             const taskData = {
@@ -92,7 +92,7 @@ describe('Task and Actual API Handlers', () => {
             const { requireRole } = await import('../../../server/utils/auth-helpers')
             vi.mocked(requireRole).mockReturnValue(sessionUser)
 
-            const workPlan = { id: 'p-1', departmentId: 'd-1', supervisors: [{ supervisorId: 's-1' }] }
+            const workPlan = { id: 'p-1', departmentId: 'd-1', department: { companyId: 'c-1' }, supervisors: [{ supervisorId: 's-1' }] }
             vi.mocked(prisma.workPlan.findFirst).mockResolvedValue(workPlan as any)
 
             const taskData = {
@@ -109,7 +109,7 @@ describe('Task and Actual API Handlers', () => {
             const event = mockEvent()
             event.context.params.id = 'p-1'
 
-            await expect(handler(event)).rejects.toThrow('Assigned user must be in the same department and have an available role')
+            await expect(handler(event)).rejects.toThrow('Assigned user must be in the same company')
         })
     })
 

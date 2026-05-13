@@ -9,7 +9,11 @@ export const createActualSchema = z.object({
     completionPct: z.number().min(0, 'Completion must be at least 0').max(100, 'Completion cannot exceed 100'),
     status: z.enum(['DONE', 'PARTIAL', 'NOT_DONE']),
     note: z.string().optional().nullable(),
-    attachmentUrl: z.string().url().optional().nullable()
+    attachmentUrl: z
+        .string()
+        .refine((value) => value.startsWith('/') || /^https?:\/\//i.test(value), 'Invalid attachment URL')
+        .optional()
+        .nullable()
 })
 
 export const updateActualSchema = createActualSchema.partial()

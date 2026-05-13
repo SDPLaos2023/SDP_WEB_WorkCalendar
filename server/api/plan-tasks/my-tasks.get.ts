@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
                         completionPct: true,
                         status: true,
                         note: true,
+                        attachmentUrl: true,
                         createdAt: true
                     },
                     orderBy: { actualDate: 'desc' }
@@ -55,7 +56,8 @@ export default defineEventHandler(async (event) => {
                     recurrenceType: task.recurrenceType,
                     recurrenceStart: task.recurrenceStart,
                     recurrenceEnd: task.recurrenceEnd,
-                    recurrenceDay: task.recurrenceDay
+                    recurrenceDay: task.recurrenceDay,
+                    plannedWeeks: task.plannedWeeks
                 }, cleanActuals)
                 return { ...result, compliance }
             }

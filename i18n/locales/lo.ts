@@ -42,7 +42,12 @@ export default {
       week: 'ອາທິດ',
       month: 'ເດືອນ',
       quarter: 'ໄຕມາດ',
-      more: 'ເພີ່ມເຕີມ'
+      more: 'ເພີ່ມເຕີມ',
+      months: {
+        jan: 'ມັງກອນ', feb: 'ກຸມພາ', mar: 'ມີນາ', apr: 'ເມສາ',
+        may: 'ພຶດສະພາ', jun: 'ມິຖຸນາ', jul: 'ກໍລະກົດ', aug: 'ສິງຫາ',
+        sep: 'ກັນຍາ', oct: 'ຕຸລາ', nov: 'ພະຈິກ', dec: 'ທັນວາ'
+      }
     },
     auth: {
       login: 'ເຂົ້າສູ່ລະບົບ',
@@ -106,8 +111,15 @@ export default {
       no_plans_officer: 'ຍັງບໍ່ມີແຜນວຽກໃນລະບົບ ກະລຸນາຕິດຕໍ່ຜູ້ຈັດການ (Manager) ຂອງທ່ານ',
       no_tasks_in_plan: 'ຍັງບໍ່ມີໜ້າວຽກໃນແຜນນີ້',
       no_tasks_hint: 'ກົດ "ເພີ່ມໜ້າວຽກ" ເພື່ອສ້າງໜ້າວຽກໂຄງການ ຫຼື ໜ້າວຽກປະຈຳ ແລ້ວ Assign ໃຫ້ Officer',
-      no_tasks_officer_hint: 'ທ່ານຍັງບໍ່ໄດ້ຮັບວຽກຈາກ Supervisor ກໍ່ຍັງ',
-      assign: 'ມອບໝາຍ'
+      no_tasks_officer_hint: 'ທ່ານຍັງບໍ່ທັນໄດ້ຮັບການມອບໝາຍວຽກຈາກຫົວໜ້າທີມ.',
+      assign: 'ມອບໝາຍ',
+      overall_progress: 'ຄວາມຄືບໜ້າລວມຂອງແຜນວຽກ',
+      weight_budget: 'ງົບນ້ຳໜັກ',
+      weight_complete: 'ນ້ຳໜັກທັງໝົດຖືກຈັດສັນຄົບແລ້ວ',
+      weight_remaining: 'ເຫຼືອອີກ: {n}% — ຕ້ອງລວມໃຫ້ຄົບ 100 ຈຶ່ງຈະ Activate ໄດ້',
+      weight_must_100: 'ນ້ຳໜັກລວມຕ້ອງ = 100% ຈຶ່ງຈະ Activate ໄດ້',
+      error_no_tasks: 'ບໍ່ສາມາດ Activate ແຜນທີ່ບໍ່ມີໜ້າວຽກ',
+      error_weight_not_100: 'ນ້ຳໜັກລວມຂອງທຸກໜ້າວຽກຕ້ອງ = 100% ກ່ອນ Activate'
     },
     tasks: {
       title: 'ໜ້າວຽກ (Tasks)',
@@ -165,6 +177,7 @@ export default {
       status: 'ສະຖານະ',
       note: 'ໝາຍເຫດ',
       attachment_url: 'ລິ້ງເອກະສານຊ່ວຍເຫຼືອ',
+      weight: 'ນ້ຳໜັກ',
     },
     reports: {
       hub: 'ສູນລວມລາຍງານ (Reports Hub)',
@@ -187,10 +200,21 @@ export default {
       export_csv: 'ບັນທຶກເປັນ Excel (CSV)',
       print: 'ພິມ',
       filter: 'ຕົວກັ່ນຕອງ (Filter)',
-      plan: 'ແຜນ',
       actual: 'ປະຕິບັດຈິງ',
       expected: 'ຄາດຫວັງ',
-      missed_dates: 'ວັນທີ່ຂາດຫາຍ'
+      missed_dates: 'ວັນທີ່ຂາດຫາຍ',
+      period_monthly: 'ລາຍເດືອນ',
+      period_yearly: 'ລາຍປີ',
+      evaluation_period: 'ຮອບປະເມີນ',
+      work_plan: 'ແຜນວຽກ',
+      achieved_target: 'ເຮັດໄດ້ / ເປົ້າໝາຍ',
+      kpi_score: 'ຄະແນນ KPI',
+      average_performance: 'ຜົນງານສະເລ່ຍ',
+      days: 'ວັນ',
+      months_unit: 'ເດືອນ',
+      tasks_in_plan: 'ວຽກໃນແຜນ',
+      logged_in_period: 'ບັນທຶກໃນຮອບນີ້ {count} ລາຍການ',
+      achievement: 'ຜົນສຳເລັດ'
     },
     management: {
       company: 'ບໍລິສັດ',
