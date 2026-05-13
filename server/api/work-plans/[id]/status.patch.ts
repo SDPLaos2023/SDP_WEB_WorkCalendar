@@ -59,6 +59,31 @@ export default defineEventHandler(async (event) => {
             })
         }
 
+        // 4b. When activating: validate total task weight = 100
+        if (currentStatus === 'DRAFT' && newStatus === 'ACTIVE') {
+            const planTasks = await prisma.planTask.findMany({
+                where: { workPlanId: id, deletedAt: null },
+                select: { weight: true }
+            })
+
+            if (planTasks.length === 0) {
+                throw createError({
+                    statusCode: 400,
+                    statusMessage: 'plans.error_no_tasks'
+                })
+            }
+
+            const totalWeight = planTasks.reduce((sum, t) => sum + Number(t.weight || 0), 0)
+            // Allow small floating point tolerance (99.99 - 100.01)
+            if (totalWeight < 99.99 || totalWeight > 100.01) {
+                throw createError({
+                    statusCode: 400,
+                    statusMessage: 'plans.error_weight_not_100',
+                    data: { totalWeight: Math.round(totalWeight * 100) / 100 }
+                })
+            }
+        }
+
         // 5. Update Status
         const updatedPlan = await prisma.workPlan.update({
             where: { id },

@@ -49,12 +49,14 @@ export default defineEventHandler(async (event) => {
         const taskData = result.data
 
         // 3. Verify assignedToId (Optional)
-        if (taskData.assignedToId) {
+        let assignedToId = taskData.assignedToId
+        if (assignedToId === '') assignedToId = null
+
+        if (assignedToId) {
             const assignedUser = await prisma.user.findFirst({
                 where: {
-                    id: taskData.assignedToId,
-                    role: { in: ['MANAGER', 'SUPERVISOR', 'OFFICER'] },
-                    departmentId: workPlan.departmentId,
+                    id: assignedToId,
+                    companyId: workPlan.department.companyId,
                     deletedAt: null
                 }
             })
@@ -62,7 +64,7 @@ export default defineEventHandler(async (event) => {
             if (!assignedUser) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: 'Assigned user must be in the same department and have an available role'
+                    statusMessage: 'Assigned user must be in the same company'
                 })
             }
         }
@@ -71,12 +73,13 @@ export default defineEventHandler(async (event) => {
         const createData: any = {
             workPlanId,
             supervisorId: taskData.supervisorId || (user.role === 'SUPERVISOR' ? user.id : null),
-            assignedToId: taskData.assignedToId,
+            assignedToId: assignedToId || null,
             createdById: user.id,
             taskName: taskData.taskName,
             description: taskData.description,
             taskType: taskData.taskType,
             priority: taskData.priority,
+            weight: taskData.weight ?? 0,
             status: 'PENDING'
         }
 
@@ -119,6 +122,10 @@ export default defineEventHandler(async (event) => {
     } catch (error: any) {
         if (error.statusCode) throw error
         console.error('[CREATE_TASK_ERROR]:', error)
-        throw createError({ statusCode: 500, statusMessage: 'common.error_internal' })
+        // Temporarily include error message for debugging
+        throw createError({ 
+            statusCode: 500, 
+            statusMessage: process.env.NODE_ENV === 'development' ? `Internal Error: ${error.message}` : 'common.error_internal' 
+        })
     }
 })

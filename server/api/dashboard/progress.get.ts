@@ -56,12 +56,14 @@ export default defineEventHandler(async (event) => {
         // 3. Format Response
         const progressResults = projects.map(task => {
             const latest = task.actuals[0] || null
+
             return {
                 taskId: task.id,
                 taskName: task.taskName,
                 assignedTo: task.assignedTo,
                 priority: task.priority,
                 status: task.status,
+                weight: Number(task.weight || 0),
                 plannedStart: task.plannedStart,
                 plannedEnd: task.plannedEnd,
                 plannedDays: task.plannedDays,

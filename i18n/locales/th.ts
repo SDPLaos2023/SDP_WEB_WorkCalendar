@@ -41,7 +41,12 @@ export default {
       week: 'สัปดาห์',
       month: 'เดือน',
       quarter: 'ไตรมาส',
-      more: 'เพิ่มเติม'
+      more: 'เพิ่มเติม',
+      months: {
+        jan: 'มกราคม', feb: 'กุมภาพันธ์', mar: 'มีนาคม', apr: 'เมษายน',
+        may: 'พฤษภาคม', jun: 'มิถุนายน', jul: 'กรกฎาคม', aug: 'สิงหาคม',
+        sep: 'กันยายน', oct: 'ตุลาคม', nov: 'พฤศจิกายน', dec: 'ธันวาคม'
+      }
     },
     auth: {
       login: 'เข้าสู่ระบบ',
@@ -105,8 +110,15 @@ export default {
       no_plans_officer: 'ยังไม่มีแผนงานในระบบ กรุณาติดต่อผู้จัดการ (Manager) ของคุณ',
       no_tasks_in_plan: 'ยังไม่มีงานในแผนนี้',
       no_tasks_hint: 'กด "เพิ่มงาน" เพื่อสร้างงานโครงการ หรืองานประจำ แล้ว Assign ให้ Officer',
-      no_tasks_officer_hint: 'คุณยังไม่ได้รับมอบหมายงานจาก Supervisor',
-      assign: 'มอบหมาย'
+      no_tasks_officer_hint: 'คุณยังไม่ได้รับมอบหมายงานจากหัวหน้าทีม',
+      assign: 'มอบหมาย',
+      overall_progress: 'ความคืบหน้าโดยรวมของแผนงาน',
+      weight_budget: 'งบน้ำหนัก (Weight Budget)',
+      weight_complete: 'จัดสรรน้ำหนักครบ 100% แล้ว',
+      weight_remaining: 'เหลืออีก: {n}% — ต้องรวมให้ครบ 100% ถึงจะ Activate ได้',
+      weight_must_100: 'น้ำหนักรวมต้อง = 100% ถึงจะ Activate ได้',
+      error_no_tasks: 'ไม่สามารถ Activate แผนที่ยังไม่มีงานได้',
+      error_weight_not_100: 'น้ำหนักรวมของทุกงานต้อง = 100% ก่อนที่จะทำการ Activate'
     },
     tasks: {
       title: 'หน้าที่ความรับผิดชอบ (Tasks)',
@@ -164,6 +176,7 @@ export default {
       status: 'สถานะ',
       note: 'หมายเหตุ',
       attachment_url: 'ลิงก์เอกสารประกอบ',
+      weight: 'น้ำหนัก',
     },
     reports: {
       hub: 'ศูนย์รวมรายงาน (Reports Hub)',
@@ -189,7 +202,19 @@ export default {
       plan: 'แผน',
       actual: 'ทำจริง',
       expected: 'ตามแผน',
-      missed_dates: 'วันที่ขาดหาย'
+      missed_dates: 'วันที่ขาดหาย',
+      period_monthly: 'รายเดือน',
+      period_yearly: 'รายปี',
+      evaluation_period: 'รอบประเมิน',
+      work_plan: 'แผนงาน',
+      achieved_target: 'ทำได้ / เป้าหมาย',
+      kpi_score: 'คะแนน KPI',
+      average_performance: 'ผลงานเฉลี่ย',
+      days: 'วัน',
+      months_unit: 'เดือน',
+      tasks_in_plan: 'งานในแผน',
+      logged_in_period: 'บันทึกในรอบนี้ {count} รายการ',
+      achievement: 'ผลสำเร็จ'
     },
     management: {
       company: 'บริษัท',

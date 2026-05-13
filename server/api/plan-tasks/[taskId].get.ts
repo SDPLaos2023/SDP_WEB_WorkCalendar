@@ -80,7 +80,8 @@ export default defineEventHandler(async (event) => {
                 recurrenceType: task.recurrenceType,
                 recurrenceStart: task.recurrenceStart,
                 recurrenceEnd: task.recurrenceEnd,
-                recurrenceDay: task.recurrenceDay
+                recurrenceDay: task.recurrenceDay,
+                plannedWeeks: task.plannedWeeks
             }, cleanActuals)
         }
 

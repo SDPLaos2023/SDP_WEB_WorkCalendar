@@ -57,7 +57,10 @@ const fetchWorkPlans = async () => {
     
     const res = await apiFetch<any>('/api/work-plans', { params })
     if (res.success) {
-      workPlans.value = res.data
+      workPlans.value = res.data.map((plan: any) => ({
+        ...plan,
+        name: plan.name || plan.title
+      }))
     }
   } catch (err) {
     console.error('Failed to fetch work plans:', err)

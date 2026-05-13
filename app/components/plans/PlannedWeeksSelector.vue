@@ -74,10 +74,10 @@ const clearAll = () => {
         <tbody>
           <tr>
             <template v-for="month in months" :key="month">
-              <td v-for="week in weeks" :key="week" 
+              <td v-for="week in weeks" :key="week"
                   class="h-10 w-10 border border-slate-200 dark:border-slate-800 rounded-lg cursor-pointer transition-all duration-300 shadow-sm"
-                  :class="isSelected(month, week) 
-                    ? 'bg-primary-600 border-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.3)] scale-105 z-10' 
+                  :class="isSelected(month, week)
+                    ? 'bg-primary-600 border-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.3)] scale-105 z-10'
                     : 'bg-slate-50 dark:bg-slate-900/50 hover:border-primary-400 hover:bg-white dark:hover:bg-slate-800'"
                   @click="toggleWeek(month, week)">
                   <div v-if="isSelected(month, week)" class="flex items-center justify-center">
@@ -88,10 +88,6 @@ const clearAll = () => {
           </tr>
         </tbody>
       </table>
-    </div>
-    <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-3 font-normal bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-        <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-primary-500" />
-        <span>เลือกสัปดาห์ที่ต้องการให้ปรากฏในตารางแผนงานรายปี (Annual Work Plan Grid)</span>
     </div>
   </div>
 </template>

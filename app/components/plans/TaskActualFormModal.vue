@@ -37,7 +37,8 @@ const state = reactive({
   actualDays: 1,
   completionPct: 0,
   status: 'DONE' as 'DONE' | 'PARTIAL' | 'NOT_DONE',
-  note: ''
+  note: '',
+  attachmentUrl: ''
 })
 
 const existingRecord = computed(() => {
@@ -80,11 +81,13 @@ watch(existingRecord, (record) => {
     state.completionPct = Number(record.completionPct)
     state.note = record.note || ''
     state.updateType = record.updateType || state.updateType
+    state.attachmentUrl = record.attachmentUrl || ''
   } else {
      // Reset for new records
      state.status = 'DONE'
      state.completionPct = isRoutine.value ? 100 : 0
      state.note = ''
+     state.attachmentUrl = ''
   }
 }, { immediate: true })
 
@@ -98,6 +101,52 @@ watch(() => state.status, (newStatus) => {
 })
 
 const loading = ref(false)
+const uploadLoading = ref(false)
+
+const selectedFileName = computed(() => {
+  if (!state.attachmentUrl) return ''
+  const parts = state.attachmentUrl.split('/')
+  return parts[parts.length - 1] || state.attachmentUrl
+})
+
+async function handleFileSelected(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  uploadLoading.value = true
+  try {
+    const response = await apiFetch<any>('/api/uploads/task-actual', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (response?.success) {
+      state.attachmentUrl = response.data.attachmentUrl
+      toast.add({
+        title: t('common.success'),
+        description: 'Upload file success',
+        color: 'success'
+      })
+    }
+  } catch (err: any) {
+    toast.add({
+      title: t('common.error'),
+      description: err.data?.statusMessage || 'Upload failed',
+      color: 'error'
+    })
+  } finally {
+    uploadLoading.value = false
+    target.value = ''
+  }
+}
+
+function removeAttachment() {
+  state.attachmentUrl = ''
+}
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   if (!props.task?.id) return
@@ -201,6 +250,42 @@ async function onSubmit(event: FormSubmitEvent<any>) {
           <UTextarea v-model="state.note" class="w-full" />
         </UFormField>
 
+        <UFormField label="Attach file / image" name="attachmentUrl">
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx"
+                class="block w-full text-sm file:mr-4 file:px-4 file:py-2 file:rounded-md file:border-0 file:bg-primary file:text-white file:font-semibold hover:file:opacity-90"
+                :disabled="uploadLoading || loading"
+                @change="handleFileSelected"
+              />
+            </div>
+
+            <div v-if="uploadLoading" class="text-xs text-neutral-500">
+              Uploading...
+            </div>
+
+            <div v-if="state.attachmentUrl" class="flex items-center gap-2 text-sm">
+              <a
+                :href="state.attachmentUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary underline break-all"
+              >
+                {{ selectedFileName }}
+              </a>
+              <UButton
+                size="xs"
+                color="error"
+                variant="ghost"
+                icon="i-heroicons-x-mark"
+                @click="removeAttachment"
+              />
+            </div>
+          </div>
+        </UFormField>
+
         <div class="flex justify-end gap-3 pt-4">
           <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false" />
           <UButton type="submit" :label="t('common.save')" :loading="loading" color="primary" class="px-6 font-bold" />
@@ -226,6 +311,15 @@ async function onSubmit(event: FormSubmitEvent<any>) {
                 </span>
                 <p v-if="actual.note" class="text-xs text-neutral-500 italic line-clamp-1">"{{ actual.note }}"</p>
                 <p v-else class="text-xs text-neutral-400 opacity-50">{{ t('common.none') }}</p>
+                <a
+                  v-if="actual.attachmentUrl"
+                  :href="actual.attachmentUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs text-primary underline break-all"
+                >
+                  View attachment
+                </a>
               </div>
 
               <div class="flex items-center gap-3 text-right">
