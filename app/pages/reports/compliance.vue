@@ -30,9 +30,13 @@ const openUpdateModal = (row: any) => {
 }
 
 const fetchData = async () => {
-  const result = await fetchReport('/api/reports/compliance-detail', currentFilters.value)
-  if (result) {
-    data.value = result
+  try {
+    const result = await fetchReport('/api/reports/compliance-detail', currentFilters.value)
+    if (result) {
+      data.value = result
+    }
+  } catch {
+    // error state is handled by useReport()
   }
 }
 
@@ -51,6 +55,16 @@ const handleCSVExport = () => {
 
 onMounted(() => {
   fetchData()
+})
+
+onBeforeRouteLeave(() => {
+  isUpdateModalOpen.value = false
+  selectedTaskName.value = ''
+  selectedUpdate.value = null
+})
+
+onUnmounted(() => {
+  isUpdateModalOpen.value = false
 })
 
 const columns = computed<TableColumn<any>[]>(() => [
@@ -163,11 +177,11 @@ const columns = computed<TableColumn<any>[]>(() => [
     <div v-if="error" class="bg-error-50 dark:bg-error-900/10 border border-error-500/20 text-error-600 dark:text-error-400 p-4 rounded-xl text-sm font-normal">
         {{ error }}
     </div>
-  </div>
 
-  <ReportsUpdatePreviewModal
-    v-model:open="isUpdateModalOpen"
-    :task-name="selectedTaskName"
-    :update="selectedUpdate"
-  />
+    <ReportsUpdatePreviewModal
+      v-model:open="isUpdateModalOpen"
+      :task-name="selectedTaskName"
+      :update="selectedUpdate"
+    />
+  </div>
 </template>
