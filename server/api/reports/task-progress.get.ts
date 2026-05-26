@@ -88,7 +88,9 @@ export default defineEventHandler(async (event) => {
                         completionPct: Number(latest.completionPct || 0),
                         note: latest.note || '',
                         attachmentUrl: latest.attachmentUrl || '',
-                        updatedBy: `${latest.updatedBy.firstName} ${latest.updatedBy.lastName}`
+                        updatedBy: latest.updatedBy
+                            ? `${latest.updatedBy.firstName} ${latest.updatedBy.lastName}`
+                            : '-'
                     }
                     : null
             }
