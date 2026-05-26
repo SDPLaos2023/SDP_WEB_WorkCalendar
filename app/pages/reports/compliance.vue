@@ -11,6 +11,9 @@ definePageMeta({
 
 const { fetchReport, downloadCSV, loading, error } = useReport()
 const data = ref<any[]>([])
+const isUpdateModalOpen = ref(false)
+const selectedTaskName = ref('')
+const selectedUpdate = ref<any>(null)
 const currentFilters = ref({
   year: new Date().getFullYear(),
   departmentId: '',
@@ -18,6 +21,13 @@ const currentFilters = ref({
 })
 
 const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+
+const openUpdateModal = (row: any) => {
+  selectedTaskName.value = row.taskName
+  selectedUpdate.value = row.latestUpdate
+  isUpdateModalOpen.value = true
+}
 
 const fetchData = async () => {
   const result = await fetchReport('/api/reports/compliance-detail', currentFilters.value)
@@ -95,6 +105,16 @@ const columns = computed<TableColumn<any>[]>(() => [
         dates.length > 2 ? h('span', { class: 'text-[10px] text-neutral-500 my-auto' }, `+${dates.length - 2} ${t('common.more')}`) : null
       ])
     }
+  },
+  {
+    accessorKey: 'latestUpdate',
+    header: t('common.details'),
+    cell: ({ row }) => h(UButton, {
+      size: 'xs',
+      variant: 'soft',
+      icon: 'i-heroicons-eye',
+      onClick: () => openUpdateModal(row.original)
+    }, () => t('common.view'))
   }
 ])
 </script>
@@ -144,4 +164,10 @@ const columns = computed<TableColumn<any>[]>(() => [
         {{ error }}
     </div>
   </div>
+
+  <ReportsUpdatePreviewModal
+    v-model:open="isUpdateModalOpen"
+    :task-name="selectedTaskName"
+    :update="selectedUpdate"
+  />
 </template>

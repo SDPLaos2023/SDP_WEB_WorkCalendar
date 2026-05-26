@@ -14,6 +14,15 @@ type KpiTask = {
   actual: number
   status: string
   actualCount: number
+  latestUpdate: {
+    actualDate: string
+    updateType: string
+    status: string
+    completionPct: number
+    note: string
+    attachmentUrl: string
+    updatedBy: string
+  } | null
 }
 
 type KpiPlan = {
@@ -38,6 +47,9 @@ const { apiFetch, role } = useAuth()
 
 const reportData = ref<KpiPlan[]>([])
 const expandedRows = ref<Record<string, boolean>>({})
+const isUpdateModalOpen = ref(false)
+const selectedTaskName = ref('')
+const selectedUpdate = ref<KpiTask['latestUpdate']>(null)
 const departments = ref<Array<{ label: string, value: string }>>([])
 const workPlans = ref<Array<{ label: string, value: string }>>([])
 
@@ -150,6 +162,12 @@ const fetchData = async () => {
 
 function toggleRow(id: string) {
   expandedRows.value[id] = !expandedRows.value[id]
+}
+
+const openUpdateModal = (task: KpiTask) => {
+  selectedTaskName.value = task.name
+  selectedUpdate.value = task.latestUpdate
+  isUpdateModalOpen.value = true
 }
 
 watch([() => filters.year, () => filters.departmentId], () => {
@@ -327,6 +345,15 @@ onMounted(() => {
                           <UIcon name="i-heroicons-document-check" />
                           <span>{{ t('reports.logged_in_period', { count: task.actualCount }) }}</span>
                         </div>
+                        <UButton
+                          size="xs"
+                          variant="soft"
+                          icon="i-heroicons-eye"
+                          class="mb-3"
+                          @click.stop="openUpdateModal(task)"
+                        >
+                          {{ t('common.view') }}
+                        </UButton>
                         <UProgress :value="task.actual" size="xs" :color="task.actual >= 80 ? 'success' : 'warning'" />
                       </div>
                     </div>
@@ -349,5 +376,11 @@ onMounted(() => {
     <div v-if="error" class="bg-error-50 p-4 border border-error-200 rounded-xl text-error-600 text-sm">
       {{ error }}
     </div>
+
+    <ReportsUpdatePreviewModal
+      v-model:open="isUpdateModalOpen"
+      :task-name="selectedTaskName"
+      :update="selectedUpdate"
+    />
   </div>
 </template>

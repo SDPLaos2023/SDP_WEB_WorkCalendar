@@ -1,5 +1,6 @@
 import { prisma } from '../../utils/prisma'
 import { getUser } from '../../utils/auth-helpers'
+import { calculateCompliance } from '../../utils/compliance'
 import { convertToCSV } from '../../utils/csv'
 
 export default defineEventHandler(async (event) => {
@@ -9,13 +10,12 @@ export default defineEventHandler(async (event) => {
         const year = query.year ? parseInt(query.year as string) : new Date().getFullYear()
         const departmentId = (query.departmentId as string) || undefined
         const workPlanId = (query.workPlanId as string) || undefined
-        const status = (query.status as string) || undefined
         const format = query.format as string
 
         // 1. Build Scoping Filters
         const taskWhere: any = {
             deletedAt: null,
-            taskType: 'PROJECT',
+            taskType: 'ROUTINE',
             workPlan: { deletedAt: null, year }
         }
 
@@ -40,9 +40,6 @@ export default defineEventHandler(async (event) => {
         if (workPlanId) {
             taskWhere.workPlanId = workPlanId
         }
-        if (status) {
-            taskWhere.status = status
-        }
 
         // 2. Fetch Tasks
         const tasks = await prisma.planTask.findMany({
@@ -51,14 +48,7 @@ export default defineEventHandler(async (event) => {
                 workPlan: { select: { title: true } },
                 assignedTo: { select: { firstName: true, lastName: true } },
                 actuals: {
-                    where: { deletedAt: null },
-                    orderBy: { actualDate: 'desc' },
-                    take: 1,
-                    include: {
-                        updatedBy: {
-                            select: { firstName: true, lastName: true }
-                        }
-                    }
+                    orderBy: { actualDate: 'desc' }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -66,31 +56,18 @@ export default defineEventHandler(async (event) => {
 
         // 3. Format Data
         const reportData = tasks.map(task => {
-            const latest = task.actuals[0]
+            const compliance = calculateCompliance(task, task.actuals)
             return {
                 taskId: task.id,
                 taskName: task.taskName,
                 workPlan: task.workPlan.title,
-                assignedTo: task.assignedTo
-                    ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
-                    : '-',
-                priority: task.priority,
-                status: task.status,
-                plannedStart: task.plannedStart?.toISOString().split('T')[0] || '-',
-                plannedEnd: task.plannedEnd?.toISOString().split('T')[0] || '-',
-                completionPct: latest ? `${latest.completionPct}%` : '0%',
-                latestNote: latest?.note || '-',
-                latestUpdate: latest
-                    ? {
-                        actualDate: latest.actualDate?.toISOString().split('T')[0] || null,
-                        updateType: latest.updateType,
-                        status: latest.status,
-                        completionPct: Number(latest.completionPct || 0),
-                        note: latest.note || '',
-                        attachmentUrl: latest.attachmentUrl || '',
-                        updatedBy: `${latest.updatedBy.firstName} ${latest.updatedBy.lastName}`
-                    }
-                    : null
+                assignedTo: `${task.assignedTo.firstName} ${task.assignedTo.lastName}`,
+                recurrence: task.recurrenceType,
+                expected: compliance?.expectedPeriods || 0,
+                completed: compliance?.completedPeriods || 0,
+                compliancePct: `${compliance?.compliancePct || 0}%`,
+                missedCount: compliance?.missedDates.length || 0,
+                missedDates: compliance?.missedDates.map(d => d.split('T')[0]).join(', ') || '-'
             }
         })
 
@@ -98,7 +75,7 @@ export default defineEventHandler(async (event) => {
         if (format === 'csv') {
             const csv = convertToCSV(reportData)
             setHeader(event, 'Content-Type', 'text/csv')
-            setHeader(event, 'Content-Disposition', `attachment; filename="task-progress-${year}.csv"`)
+            setHeader(event, 'Content-Disposition', `attachment; filename="compliance-report-${year}.csv"`)
             return csv
         }
 
@@ -108,7 +85,8 @@ export default defineEventHandler(async (event) => {
         }
     } catch (error: any) {
         if (error.statusCode) throw error
-        console.error('[REPORT_TASK_PROGRESS_ERROR]:', error)
+        console.error('[REPORT_COMPLIANCE_DETAIL_ERROR]:', error)
         throw createError({ statusCode: 500, statusMessage: 'Internal server error' })
     }
 })
+

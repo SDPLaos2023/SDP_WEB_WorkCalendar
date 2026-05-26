@@ -10,6 +10,9 @@ definePageMeta({
 
 const { fetchReport, downloadCSV, loading, error } = useReport()
 const data = ref<any[]>([])
+const isUpdateModalOpen = ref(false)
+const selectedTaskName = ref('')
+const selectedUpdate = ref<any>(null)
 const currentFilters = ref({
   year: new Date().getFullYear(),
   departmentId: '',
@@ -19,6 +22,13 @@ const currentFilters = ref({
 
 const UBadge = resolveComponent('UBadge')
 const UProgress = resolveComponent('UProgress')
+const UButton = resolveComponent('UButton')
+
+const openUpdateModal = (row: any) => {
+  selectedTaskName.value = row.taskName
+  selectedUpdate.value = row.latestUpdate
+  isUpdateModalOpen.value = true
+}
 
 const fetchData = async () => {
   const result = await fetchReport('/api/reports/task-progress', currentFilters.value)
@@ -87,6 +97,16 @@ const columns = computed<TableColumn<any>[]>(() => [
       const end = row.original.plannedEnd
       return h('span', { class: 'text-xs tabular-nums text-neutral-500' }, `${formatDate(start)} to ${formatDate(end)}`)
     }
+  },
+  {
+    accessorKey: 'latestUpdate',
+    header: t('common.details'),
+    cell: ({ row }) => h(UButton, {
+      size: 'xs',
+      variant: 'soft',
+      icon: 'i-heroicons-eye',
+      onClick: () => openUpdateModal(row.original)
+    }, () => t('common.view'))
   },
   {
     accessorKey: 'completionPct',
@@ -166,4 +186,10 @@ const columns = computed<TableColumn<any>[]>(() => [
         {{ error }}
     </div>
   </div>
+
+  <ReportsUpdatePreviewModal
+    v-model:open="isUpdateModalOpen"
+    :task-name="selectedTaskName"
+    :update="selectedUpdate"
+  />
 </template>
