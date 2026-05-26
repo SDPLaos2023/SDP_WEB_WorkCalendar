@@ -47,7 +47,8 @@ export default {
         jan: 'January', feb: 'February', mar: 'March', apr: 'April',
         may: 'May', jun: 'June', jul: 'July', aug: 'August',
         sep: 'September', oct: 'October', nov: 'November', dec: 'December'
-      }
+      },
+      view: 'view'
     },
     auth: {
       login: 'Login',

@@ -48,10 +48,9 @@ export default defineEventHandler(async (event) => {
 
         const safeName = sanitizeName(file.filename || 'attachment')
         const storedName = `${Date.now()}-${randomUUID()}-${safeName}`
-        const relativeDir = path.join('uploads', 'task-actuals')
-        const relativePath = path.join(relativeDir, storedName).replace(/\\/g, '/')
-        const targetDir = path.join(process.cwd(), 'public', relativeDir)
-        const targetPath = path.join(process.cwd(), 'public', relativePath)
+        const relativeDir = path.join('storage', 'task-actuals')
+        const targetDir = path.join(process.cwd(), relativeDir)
+        const targetPath = path.join(targetDir, storedName)
 
         await fs.mkdir(targetDir, { recursive: true })
         await fs.writeFile(targetPath, file.data)
@@ -59,7 +58,7 @@ export default defineEventHandler(async (event) => {
         return {
             success: true,
             data: {
-                attachmentUrl: `/${relativePath}`,
+                attachmentUrl: `/uploads/task-actuals/${storedName}`,
                 filename: file.filename || safeName,
                 mimeType: contentType,
                 size: file.data.length

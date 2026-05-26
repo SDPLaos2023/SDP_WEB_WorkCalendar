@@ -48,7 +48,13 @@ export default defineEventHandler(async (event) => {
                 workPlan: { select: { title: true } },
                 assignedTo: { select: { firstName: true, lastName: true } },
                 actuals: {
-                    orderBy: { actualDate: 'desc' }
+                    where: { deletedAt: null },
+                    orderBy: { actualDate: 'desc' },
+                    include: {
+                        updatedBy: {
+                            select: { firstName: true, lastName: true }
+                        }
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -57,17 +63,31 @@ export default defineEventHandler(async (event) => {
         // 3. Format Data
         const reportData = tasks.map(task => {
             const compliance = calculateCompliance(task, task.actuals)
+            const latest = task.actuals[0]
             return {
                 taskId: task.id,
                 taskName: task.taskName,
                 workPlan: task.workPlan.title,
-                assignedTo: `${task.assignedTo.firstName} ${task.assignedTo.lastName}`,
+                assignedTo: task.assignedTo
+                    ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                    : '-',
                 recurrence: task.recurrenceType,
                 expected: compliance?.expectedPeriods || 0,
                 completed: compliance?.completedPeriods || 0,
                 compliancePct: `${compliance?.compliancePct || 0}%`,
                 missedCount: compliance?.missedDates.length || 0,
-                missedDates: compliance?.missedDates.map(d => d.split('T')[0]).join(', ') || '-'
+                missedDates: compliance?.missedDates.map(d => d.split('T')[0]).join(', ') || '-',
+                latestUpdate: latest
+                    ? {
+                        actualDate: latest.actualDate?.toISOString().split('T')[0] || null,
+                        updateType: latest.updateType,
+                        status: latest.status,
+                        completionPct: Number(latest.completionPct || 0),
+                        note: latest.note || '',
+                        attachmentUrl: latest.attachmentUrl || '',
+                        updatedBy: `${latest.updatedBy.firstName} ${latest.updatedBy.lastName}`
+                    }
+                    : null
             }
         })
 
