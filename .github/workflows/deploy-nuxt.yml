@@ -21,7 +21,7 @@ jobs:
         run: npm run test
   deploy:
     needs: test
-    runs-on: ["self-hosted", "TDP-IMMIGRATION"]
+    runs-on: ["self-hosted", "WIN-F1K8J4DFM0U"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
           xcopy .output C:\inetpub\wwwroot\Work_Calendar\prd /E /I /Y
   pm2_restart:
     needs: deploy
-    runs-on: ["self-hosted", "TDP-IMMIGRATION"]
+    runs-on: ["self-hosted", "WIN-F1K8J4DFM0U"]
     steps:
       - name: Start/Restart PM2
         shell: cmd
