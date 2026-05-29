@@ -27,7 +27,7 @@ onMounted(() => {
       <!-- Logo or Icon in center -->
       <UIcon name="i-heroicons-calendar-days" class="absolute size-8 text-orange-600 animate-bounce" />
     </div>
-    
+
     <div class="mt-8 flex flex-col items-center gap-2 text-center font-sans">
       <h2 class="text-xl font-black uppercase tracking-widest text-slate-900 dark:text-white italic">Work <span class="text-orange-500">Calendar</span></h2>
       <p class="text-sm font-bold text-slate-500 dark:text-slate-400 tracking-tight animate-pulse">กำลังเริ่มต้นระบบบริหารจัดการองค์กร...</p>

@@ -51,8 +51,14 @@ export default defineEventHandler(async (event) => {
                 workPlan: { select: { title: true } },
                 assignedTo: { select: { firstName: true, lastName: true } },
                 actuals: {
+                    where: { deletedAt: null },
                     orderBy: { actualDate: 'desc' },
-                    take: 1
+                    take: 1,
+                    include: {
+                        updatedBy: {
+                            select: { firstName: true, lastName: true }
+                        }
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -65,13 +71,28 @@ export default defineEventHandler(async (event) => {
                 taskId: task.id,
                 taskName: task.taskName,
                 workPlan: task.workPlan.title,
-                assignedTo: `${task.assignedTo.firstName} ${task.assignedTo.lastName}`,
+                assignedTo: task.assignedTo
+                    ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                    : '-',
                 priority: task.priority,
                 status: task.status,
                 plannedStart: task.plannedStart?.toISOString().split('T')[0] || '-',
                 plannedEnd: task.plannedEnd?.toISOString().split('T')[0] || '-',
                 completionPct: latest ? `${latest.completionPct}%` : '0%',
-                latestNote: latest?.note || '-'
+                latestNote: latest?.note || '-',
+                latestUpdate: latest
+                    ? {
+                        actualDate: latest.actualDate?.toISOString().split('T')[0] || null,
+                        updateType: latest.updateType,
+                        status: latest.status,
+                        completionPct: Number(latest.completionPct || 0),
+                        note: latest.note || '',
+                        attachmentUrl: latest.attachmentUrl || '',
+                        updatedBy: latest.updatedBy
+                            ? `${latest.updatedBy.firstName} ${latest.updatedBy.lastName}`
+                            : '-'
+                    }
+                    : null
             }
         })
 

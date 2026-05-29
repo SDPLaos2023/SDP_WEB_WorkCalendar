@@ -5,53 +5,80 @@ defineProps<{
   collapsed?: boolean
 }>()
 
+const { locale, setLocale, t } = useI18n()
 const colorMode = useColorMode()
 const appConfig = useAppConfig()
+
+const { user: authUser } = useAuth()
 
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
-const user = ref({
-  name: 'Benjamin Canac',
+const userMenuInfo = computed(() => ({
+  name: authUser.value ? `${authUser.value.firstName} ${authUser.value.lastName}` : 'User',
   avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: 'Benjamin Canac'
+    src: `https://ui-avatars.com/api/?name=${authUser.value?.firstName}+${authUser.value?.lastName}&background=random`,
+    alt: authUser.value?.firstName
   }
-})
+}))
 
 const toast = useToast()
 
 const logout = async () => {
   await $fetch('/api/auth/logout', { method: 'POST' })
-  
+
   toast.add({
-    title: 'ອອກຈາກລະບົບສຳເລັດ',
+    title: t('auth.logout') + ' ' + t('common.success'),
     icon: 'i-lucide-check',
     color: 'success'
   })
-  
+
   window.location.href = '/login'
 }
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
-  label: user.value.name,
-  avatar: user.value.avatar
-}], 
+  label: userMenuInfo.value.name,
+  avatar: userMenuInfo.value.avatar
+}],
 [{
-  label: 'Profile',
+  label: t('common.details'),
   icon: 'i-lucide-user'
-}, 
-// {
-//   label: 'Billing',
-//   icon: 'i-lucide-credit-card'
-// }, 
-// {
-//   label: 'Settings',
-//   icon: 'i-lucide-settings',
-//   to: '/settings'
-// }
-], 
+},
+{
+  label: 'Language',
+  icon: 'i-lucide-languages',
+  children: [
+    {
+      label: 'ພາສາລາວ',
+      type: 'checkbox',
+      checked: locale.value === 'lo',
+      onSelect: (e) => {
+        e.preventDefault()
+        setLocale('lo')
+      }
+    },
+    {
+      label: 'ไทย',
+      type: 'checkbox',
+      checked: locale.value === 'th',
+      onSelect: (e) => {
+        e.preventDefault()
+        setLocale('th')
+      }
+    },
+    {
+      label: 'English',
+      type: 'checkbox',
+      checked: locale.value === 'en',
+      onSelect: (e) => {
+        e.preventDefault()
+        setLocale('en')
+      }
+    }
+  ]
+}
+],
 [{
   label: 'Theme',
   icon: 'i-lucide-palette',
@@ -96,7 +123,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
       }
     }))
   }]
-}, 
+},
 {
   label: 'Appearance',
   icon: 'i-lucide-sun-moon',
@@ -124,7 +151,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
       e.preventDefault()
     }
   }]
-}], 
+}],
 // [
 //   {
 //   label: 'Templates',
@@ -132,55 +159,55 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
 //   children: [{
 //     label: 'Starter',
 //     to: 'https://starter-template.nuxt.dev/'
-//   }, 
+//   },
 //   {
 //     label: 'Landing',
 //     to: 'https://landing-template.nuxt.dev/'
-//   }, 
+//   },
 //   {
 //     label: 'Docs',
 //     to: 'https://docs-template.nuxt.dev/'
-//   }, 
+//   },
 //   {
 //     label: 'SaaS',
 //     to: 'https://saas-template.nuxt.dev/'
-//   }, 
+//   },
 //   {
 //     label: 'Dashboard',
 //     to: 'https://dashboard-template.nuxt.dev/',
 //     color: 'primary',
 //     checked: true,
 //     type: 'checkbox'
-//   }, 
+//   },
 //   {
 //     label: 'Chat',
 //     to: 'https://chat-template.nuxt.dev/'
-//   }, 
+//   },
 //   {
 //     label: 'Portfolio',
 //     to: 'https://portfolio-template.nuxt.dev/'
-//   }, 
+//   },
 //   {
 //     label: 'Changelog',
 //     to: 'https://changelog-template.nuxt.dev/'
 //   }
 // ]
-// }], 
+// }],
 [
 //   {
 //   label: 'Documentation',
 //   icon: 'i-lucide-book-open',
 //   to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
 //   target: '_blank'
-// }, 
+// },
 // {
 //   label: 'GitHub repository',
 //   icon: 'i-simple-icons-github',
 //   to: 'https://github.com/nuxt-ui-templates/dashboard',
 //   target: '_blank'
-// }, 
+// },
 {
-  label: 'Log out',
+  label: t('auth.logout'),
   icon: 'i-lucide-log-out',
   onSelect: logout
 }]]))
@@ -194,8 +221,8 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   >
     <UButton
       v-bind="{
-        ...user,
-        label: collapsed ? undefined : user?.name,
+        ...userMenuInfo,
+        label: collapsed ? undefined : userMenuInfo.name,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
       color="neutral"

@@ -2,169 +2,285 @@ import { prisma } from '../../utils/prisma'
 import { getUser } from '../../utils/auth-helpers'
 import { calculateCompliance } from '../../utils/compliance'
 
+type PeriodType = 'MONTHLY' | 'YEARLY'
+type UserRole = 'SUPER_ADMIN' | 'ADMIN_COMPANY' | 'MANAGER' | 'SUPERVISOR' | 'OFFICER'
+
+type AuthUser = {
+    id: string
+    role: UserRole
+    companyId?: string
+    departmentId?: string
+}
+
+type QueryPrimitive = string | number | boolean | null | undefined
+type QueryValue = QueryPrimitive | QueryPrimitive[]
+
+type ActualRecord = {
+    actualDate: Date
+    completionPct?: unknown
+    updateType?: string
+    status?: string
+    note?: string | null
+    attachmentUrl?: string | null
+    updatedBy?: {
+        firstName: string
+        lastName: string
+    }
+}
+
+type ReportTask = {
+    id: string
+    taskName: string
+    taskType: string
+    status: string
+    recurrenceType: string | null
+    recurrenceStart: Date | null
+    recurrenceEnd: Date | null
+    recurrenceDay: number | null
+    actuals: ActualRecord[]
+}
+
+type ReportPlan = {
+    id: string
+    title: string
+    year: number
+    status: string
+    department?: { name: string } | null
+    tasks: ReportTask[]
+}
+
+type DateRange = {
+    gte: Date
+    lt: Date
+}
+
+type WorkPlanWhere = {
+    id?: string
+    deletedAt: null
+    year: number
+    departmentId?: string
+    department?: { companyId: string }
+    supervisors?: { some: { supervisorId: string } }
+    tasks?: { some: { assignedToId: string } }
+}
+
+const toStringValue = (value: QueryValue): string | undefined => {
+    if (Array.isArray(value)) {
+        const first = value[0]
+        return first === null || first === undefined ? undefined : String(first)
+    }
+
+    return value === null || value === undefined ? undefined : String(value)
+}
+
+const parseYear = (value: QueryValue): number => {
+    const parsed = Number.parseInt(toStringValue(value) || '', 10)
+    return Number.isFinite(parsed) ? parsed : new Date().getFullYear()
+}
+
+const parseMonth = (value: QueryValue): number => {
+    const parsed = Number.parseInt(toStringValue(value) || '', 10)
+    if (!Number.isFinite(parsed)) return new Date().getMonth() + 1
+    return Math.min(Math.max(parsed, 1), 12)
+}
+
+const parsePeriodType = (value: QueryValue): PeriodType => (
+    toStringValue(value) === 'YEARLY' ? 'YEARLY' : 'MONTHLY'
+)
+
+const roundPct = (value: number): number => Math.round(value * 100) / 100
+
+const dateRangeForPeriod = (year: number, month: number, period: PeriodType): DateRange => {
+    if (period === 'YEARLY') {
+        return {
+            gte: new Date(year, 0, 1),
+            lt: new Date(year + 1, 0, 1)
+        }
+    }
+
+    return {
+        gte: new Date(year, month - 1, 1),
+        lt: new Date(year, month, 1)
+    }
+}
+
+const uniquePeriodUnits = (actuals: ActualRecord[], period: PeriodType): number => {
+    const units = new Set<string>()
+
+    for (const actual of actuals) {
+        const date = new Date(actual.actualDate)
+        const key = period === 'YEARLY'
+            ? `${date.getFullYear()}-${date.getMonth()}`
+            : date.toISOString().slice(0, 10)
+        units.add(key)
+    }
+
+    return units.size
+}
+
+const latestCompletion = (task: ReportTask): number => {
+    const latest = task.actuals[0]
+    return Number(latest?.completionPct || 0)
+}
+
+const taskAchievement = (task: ReportTask): number => {
+    if (task.taskType === 'PROJECT') {
+        return latestCompletion(task)
+    }
+
+    const compliance = calculateCompliance(
+        task,
+        task.actuals.map(actual => ({
+            ...actual,
+            actualDate: new Date(actual.actualDate)
+        }))
+    )
+
+    return compliance?.compliancePct || 0
+}
+
+const buildPlanWhere = (
+    user: AuthUser,
+    year: number,
+    departmentId?: string,
+    workPlanId?: string,
+    companyId?: string
+): WorkPlanWhere => {
+    const where: WorkPlanWhere = {
+        deletedAt: null,
+        year
+    }
+
+    if (workPlanId) {
+        where.id = workPlanId
+    }
+
+    if (user.role === 'SUPER_ADMIN') {
+        if (companyId) where.department = { companyId }
+    } else if (user.role === 'ADMIN_COMPANY' && user.companyId) {
+        where.department = { companyId: user.companyId }
+    } else if (user.role === 'MANAGER' && user.departmentId) {
+        where.departmentId = user.departmentId
+    } else if (user.role === 'SUPERVISOR') {
+        where.supervisors = { some: { supervisorId: user.id } }
+    } else if (user.role === 'OFFICER') {
+        where.tasks = { some: { assignedToId: user.id } }
+    }
+
+    if (departmentId && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN_COMPANY')) {
+        where.departmentId = departmentId
+    }
+
+    return where
+}
+
+const summarizePlan = (plan: ReportPlan, period: PeriodType) => {
+    const actuals = plan.tasks.flatMap(task => task.actuals)
+    const completedUnits = uniquePeriodUnits(actuals, period)
+    const targetUnits = period === 'MONTHLY' ? 30 : 12
+    const kpiPct = roundPct(Math.min((completedUnits / targetUnits) * 100, 100))
+
+    let totalAchievement = 0
+    const tasks = plan.tasks.map(task => {
+        const actual = roundPct(taskAchievement(task))
+        totalAchievement += actual
+
+        return {
+            id: task.id,
+            name: task.taskName,
+            type: task.taskType,
+            actual,
+            status: task.status,
+            actualCount: task.actuals.length,
+            latestUpdate: task.actuals[0]
+                ? {
+                    actualDate: task.actuals[0].actualDate.toISOString().split('T')[0],
+                    updateType: task.actuals[0].updateType || '',
+                    status: task.actuals[0].status || '',
+                    completionPct: Number(task.actuals[0].completionPct || 0),
+                    note: task.actuals[0].note || '',
+                    attachmentUrl: task.actuals[0].attachmentUrl || '',
+                    updatedBy: task.actuals[0].updatedBy
+                        ? `${task.actuals[0].updatedBy.firstName} ${task.actuals[0].updatedBy.lastName}`
+                        : ''
+                }
+                : null
+        }
+    })
+
+    const achievementPct = plan.tasks.length > 0 ? roundPct(totalAchievement / plan.tasks.length) : 0
+
+    return {
+        completedUnits,
+        targetUnits,
+        kpiPct,
+        achievementPct,
+        tasks
+    }
+}
+
 export default defineEventHandler(async (event) => {
     try {
-        const user = getUser(event)
-        const query = getQuery(event)
-        const year = query.year ? parseInt(query.year as string) : new Date().getFullYear()
-        const departmentId = (query.departmentId as string) || undefined
-        const type = (query.type as string) || 'OFFICER' // 'OFFICER' or 'SUPERVISOR'
+        const user = getUser(event) as AuthUser
+        const query = getQuery(event) as Record<string, QueryValue>
+        const year = parseYear(query.year)
+        const month = parseMonth(query.month)
+        const period = parsePeriodType(query.period)
+        const departmentId = toStringValue(query.departmentId)
+        const workPlanId = toStringValue(query.workPlanId)
+        const companyId = toStringValue(query.companyId)
+        const actualDate = dateRangeForPeriod(year, month, period)
 
-        if (type === 'OFFICER') {
-             // 1. Build Scoping Filters for Officers
-            const officerWhere: any = {
-                role: 'OFFICER',
-                deletedAt: null
-            }
-            if (user.role === 'ADMIN_COMPANY') officerWhere.companyId = user.companyId
-            else if (user.role === 'MANAGER') officerWhere.departmentId = user.departmentId
-            if (departmentId && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN_COMPANY')) {
-                officerWhere.departmentId = departmentId
-            }
-
-            const officers = await prisma.user.findMany({
-                where: officerWhere,
-                include: {
-                    department: { select: { name: true } },
-                    assignedTasks: {
-                        where: { deletedAt: null, workPlan: { year } },
-                        include: {
-                            workPlan: { select: { title: true } },
-                            actuals: { orderBy: { actualDate: 'desc' }, take: 1 }
-                        }
-                    }
-                }
-            })
-
-            const reportData = officers.map(officer => {
-                const tasks = officer.assignedTasks
-                let totalActual = 0
-                let totalPlanned = 0 
-                
-                const taskBreakdown = tasks.map(t => {
-                    let actual = 0
-                    if (t.taskType === 'PROJECT') {
-                        actual = Number(t.actuals[0]?.completionPct || 0)
-                    } else {
-                        const compliance = calculateCompliance(t as any, t.actuals.map(a => ({ ...a, actualDate: new Date(a.actualDate) })))
-                        actual = compliance?.compliancePct || 0
-                    }
-                    
-                    const planned = 100
-                    totalPlanned += planned
-                    totalActual += actual
-
-                    return {
-                        id: t.id,
-                        name: t.taskName,
-                        type: t.taskType,
-                        planTitle: (t as any).workPlan?.title || 'N/A',
-                        planned,
-                        actual,
-                        status: t.status
-                    }
-                })
-
-                const kpi = totalPlanned > 0 ? (totalActual / totalPlanned) * 100 : 0
-
-                return {
-                    id: officer.id,
-                    name: `${officer.firstName} ${officer.lastName}`,
-                    department: officer.department?.name || 'N/A',
-                    totalTasks: tasks.length,
-                    plannedUnits: totalPlanned,
-                    actualUnits: totalActual,
-                    kpiPct: Math.round(kpi * 100) / 100,
-                    tasks: taskBreakdown
-                }
-            })
-
-            return { success: true, data: reportData }
-
-        } else {
-            // SUPERVISOR KPI
-            const supervisorWhere: any = {
-                role: 'SUPERVISOR',
-                deletedAt: null
-            }
-            if (user.role === 'ADMIN_COMPANY') supervisorWhere.companyId = user.companyId
-            else if (user.role === 'MANAGER') supervisorWhere.departmentId = user.departmentId
-            if (departmentId && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN_COMPANY')) {
-                supervisorWhere.departmentId = departmentId
-            }
-
-            const supervisors = await prisma.user.findMany({
-                where: supervisorWhere,
-                include: {
-                    department: { select: { name: true } },
-                    supervisorPlans: {
-                        where: { workPlan: { year, deletedAt: null } },
-                        include: {
-                            workPlan: {
-                                include: {
-                                    tasks: {
-                                        where: { deletedAt: null },
-                                        include: {
-                                            workPlan: { select: { title: true } },
-                                            actuals: { orderBy: { actualDate: 'desc' }, take: 1 }
-                                        }
-                                    }
+        const plans = await prisma.workPlan.findMany({
+            where: buildPlanWhere(user, year, departmentId, workPlanId, companyId),
+            include: {
+                department: { select: { name: true } },
+                tasks: {
+                    where: { deletedAt: null },
+                    include: {
+                        actuals: {
+                            where: {
+                                deletedAt: null,
+                                actualDate
+                            },
+                            orderBy: { actualDate: 'desc' },
+                            include: {
+                                updatedBy: {
+                                    select: { firstName: true, lastName: true }
                                 }
                             }
                         }
                     }
                 }
-            })
+            },
+            orderBy: { createdAt: 'desc' }
+        }) as ReportPlan[]
 
-            const reportData = supervisors.map(supervisor => {
-                const plans = supervisor.supervisorPlans.map((sp: any) => sp.workPlan)
-                const allTasks = plans.flatMap((p: any) => p.tasks)
-                
-                let totalActual = 0
-                let totalPlanned = 0
-                
-                const taskBreakdown = allTasks.map((t: any) => {
-                    let actual = 0
-                    if (t.taskType === 'PROJECT') {
-                        actual = Number(t.actuals[0]?.completionPct || 0)
-                    } else {
-                        const compliance = calculateCompliance(t, t.actuals.map((a: any) => ({ ...a, actualDate: new Date(a.actualDate) })))
-                        actual = compliance?.compliancePct || 0
-                    }
-                    
-                    const planned = 100
-                    totalPlanned += planned
-                    totalActual += actual
+        const reportData = plans.map(plan => {
+            const summary = summarizePlan(plan, period)
 
-                    return {
-                        id: t.id,
-                        name: t.taskName,
-                        type: t.taskType,
-                        planTitle: t.workPlan?.title || 'N/A',
-                        planned,
-                        actual,
-                        status: t.status
-                    }
-                })
+            return {
+                id: plan.id,
+                planName: plan.title,
+                department: plan.department?.name || 'N/A',
+                year: plan.year,
+                status: plan.status,
+                totalTasks: plan.tasks.length,
+                completedUnits: summary.completedUnits,
+                targetUnits: summary.targetUnits,
+                unitLabel: period === 'MONTHLY' ? 'days' : 'months',
+                period,
+                achievementPct: summary.achievementPct,
+                kpiPct: summary.kpiPct,
+                tasks: summary.tasks
+            }
+        })
 
-                const kpi = totalPlanned > 0 ? (totalActual / totalPlanned) * 100 : 0
+        return { success: true, data: reportData }
+    } catch (error: unknown) {
+        const statusError = error as { statusCode?: number }
+        if (statusError.statusCode) throw error
 
-                return {
-                    id: supervisor.id,
-                    name: `${supervisor.firstName} ${supervisor.lastName}`,
-                    department: supervisor.department?.name || 'N/A',
-                    totalPlans: plans.length,
-                    totalTasks: allTasks.length,
-                    plannedUnits: totalPlanned,
-                    actualUnits: totalActual,
-                    kpiPct: Math.round(kpi * 100) / 100,
-                    tasks: taskBreakdown
-                }
-            })
-
-            return { success: true, data: reportData }
-        }
-    } catch (error: any) {
         console.error('[KPI_REPORT_ERROR]:', error)
         throw createError({ statusCode: 500, statusMessage: 'Internal server error' })
     }

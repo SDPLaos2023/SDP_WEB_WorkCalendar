@@ -22,6 +22,9 @@ vi.mock('../../../server/utils/prisma', () => ({
         },
         user: {
             findFirst: vi.fn()
+        },
+        planTask: {
+            findMany: vi.fn()
         }
     }
 }))
@@ -102,6 +105,7 @@ describe('Work Plan API Handlers', () => {
             const oldPlan = { id: 'p-1', status: 'DRAFT', departmentId: 'd-1' }
             vi.mocked(prisma.workPlan.findFirst).mockResolvedValue(oldPlan as any)
             vi.mocked(readBody).mockResolvedValue({ status: 'ACTIVE' })
+            vi.mocked(prisma.planTask.findMany).mockResolvedValue([{ weight: 100 }] as any)
             vi.mocked(prisma.workPlan.update).mockResolvedValue({ ...oldPlan, status: 'ACTIVE' } as any)
 
             const event = mockEvent()

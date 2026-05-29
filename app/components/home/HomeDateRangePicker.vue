@@ -2,8 +2,10 @@
 import { DateFormatter, getLocalTimeZone, CalendarDate, today } from '@internationalized/date'
 import type { Range } from '~/types'
 
-const df = new DateFormatter('en-US', {
-  dateStyle: 'medium'
+const df = new DateFormatter('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric'
 })
 
 const selected = defineModel<Range>({ required: true })

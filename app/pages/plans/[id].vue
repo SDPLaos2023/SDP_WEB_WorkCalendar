@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 
@@ -29,15 +30,15 @@ watch(() => route.params.id, (newId) => {
     if (newId) loadData()
 })
 
-const tabs = [{
-  label: 'Project Tasks',
+const tabs = computed(() => [{
+  label: t('tasks.project'),
   icon: 'i-heroicons-briefcase',
   slot: 'project'
 }, {
-  label: 'Routine Tasks',
+  label: t('tasks.routine'),
   icon: 'i-heroicons-arrow-path',
   slot: 'routine'
-}]
+}])
 
 const UBadge = resolveComponent('UBadge')
 const UProgress = resolveComponent('UProgress')
@@ -46,10 +47,10 @@ const UButtonComp = resolveComponent('UButton')
 const projectTasks = computed(() => tasks.value.filter(t => t.taskType === 'PROJECT'))
 const routineTasks = computed(() => tasks.value.filter(t => t.taskType === 'ROUTINE'))
 
-const commonColumns: TableColumn<any>[] = [
+const commonColumns = computed<TableColumn<any>[]>(() => [
   {
     accessorKey: 'taskName',
-    header: 'Task Name',
+    header: t('tasks.name'),
     cell: ({ row }: any) => h('span', {
       class: 'font-bold cursor-pointer text-primary hover:underline',
       onClick: () => viewTask(row.original)
@@ -57,32 +58,43 @@ const commonColumns: TableColumn<any>[] = [
   },
   {
     accessorKey: 'assignedTo',
-    header: 'Assigned Officer',
+    header: t('tasks.assign_to'),
     cell: ({ row }: any) => {
       const u = row.getValue('assignedTo') as any
-      return u ? `${u.firstName} ${u.lastName}` : 'Unassigned'
+      return u ? `${u.firstName} ${u.lastName}` : t('common.none')
     }
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('common.status'),
     cell: ({ row }: any) => {
       const status = row.getValue('status') as string
       return h(UBadge, {
-        label: status,
+        label: t(`tasks.status_${status.toLowerCase()}`),
         color: status === 'COMPLETED' ? 'success' : status === 'CANCELLED' ? 'error' : 'primary',
         variant: 'soft'
       })
     }
   }
-]
+])
 
-const projectColumns = [
-  ...commonColumns,
+const projectColumns = computed<TableColumn<any>[]>(() => [
+  ...commonColumns.value,
   {
-    accessorKey: 'id',
-    header: 'Completion',
-    cell: () => h(UProgress, { value: 65, class: 'w-32' })
+    accessorKey: 'weight',
+    header: t('tasks.weight'),
+    cell: ({ row }: any) => h('span', { class: 'font-bold' }, `${Number(row.getValue('weight') || 0)}%`)
+  },
+  {
+    accessorKey: 'currentCompletionPct',
+    header: t('tasks.completion'),
+    cell: ({ row }: any) => {
+      const pct = Number(row.original.currentCompletionPct || 0)
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h(UProgress, { value: pct, class: 'w-24', color: pct >= 100 ? 'success' : 'primary' }),
+        h('span', { class: 'text-xs font-bold' }, `${pct}%`)
+      ])
+    }
   },
   {
     accessorKey: 'actions',
@@ -101,7 +113,7 @@ const projectColumns = [
         }
       }))
       // if user can edit
-      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR']).value) {
+      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])) {
         children.push(h(UButtonComp, {
           icon: 'i-heroicons-pencil',
           label: 'Edit',
@@ -128,13 +140,18 @@ const projectColumns = [
       return h('div', { class: 'flex gap-2 justify-end' }, children)
     }
   }
-]
+])
 
-const routineColumns = [
-  ...commonColumns,
+const routineColumns = computed<TableColumn<any>[]>(() => [
+  ...commonColumns.value,
+  {
+    accessorKey: 'weight',
+    header: t('tasks.weight'),
+    cell: ({ row }: any) => h('span', { class: 'font-bold' }, `${Number(row.getValue('weight') || 0)}%`)
+  },
   {
     accessorKey: 'compliance.compliancePct',
-    header: 'Compliance',
+    header: t('tasks.compliance'),
     cell: ({ row }: any) => {
       const pct = row.original.compliance?.compliancePct || 0
       return h('div', { class: 'flex items-center gap-2' }, [
@@ -145,7 +162,7 @@ const routineColumns = [
   },
   {
     accessorKey: 'recurrenceType',
-    header: 'Frequency',
+    header: t('tasks.frequency'),
     cell: ({ row }: any) => h(UBadge, { label: row.getValue('recurrenceType') as string, color: 'neutral', variant: 'subtle' })
   },
   {
@@ -164,7 +181,7 @@ const routineColumns = [
           handleDirectUpdate(row.original)
         }
       }))
-      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR']).value) {
+      if (hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])) {
         children.push(h(UButtonComp, {
           icon: 'i-heroicons-pencil',
           label: 'Edit',
@@ -191,7 +208,7 @@ const routineColumns = [
       return h('div', { class: 'flex gap-2 justify-end' }, children)
     }
   }
-]
+])
 
 // Slideover state
 const isDetailOpen = ref(false)
@@ -272,12 +289,7 @@ async function handleStatusChange(newStatus: 'ACTIVE' | 'CLOSED') {
     }
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return 'Invalid Date'
-  return new Date(dateStr).toLocaleDateString('th-TH', {
-    dateStyle: 'medium'
-  })
-}
+
 
 function formatTime(dateStr: string) {
   if (!dateStr) return 'N/A'
@@ -285,6 +297,38 @@ function formatTime(dateStr: string) {
   if (isNaN(date.getTime())) return 'N/A'
   return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
 }
+
+const planWeightedProgress = computed(() => {
+  if (!tasks.value.length) return 0
+  let totalScore = 0
+  let totalWeight = 0
+  let simpleSum = 0
+  
+  tasks.value.forEach(t => {
+    const w = Number(t.weight || 0)
+    const score = t.taskType === 'PROJECT' ? Number(t.currentCompletionPct || 0) : Number(t.compliancePct || 0)
+    totalScore += score * w
+    totalWeight += w
+    simpleSum += score
+  })
+  
+  if (totalWeight > 0) {
+    return Math.round((totalScore / totalWeight) * 100) / 100
+  }
+  return Math.round((simpleSum / tasks.value.length) * 100) / 100
+})
+
+const totalWeight = computed(() => {
+  return Math.round(tasks.value.reduce((sum, t) => sum + Number(t.weight || 0), 0) * 100) / 100
+})
+
+const remainingWeight = computed(() => {
+  return Math.round((100 - totalWeight.value) * 100) / 100
+})
+
+const isWeightValid = computed(() => {
+  return totalWeight.value >= 99.99 && totalWeight.value <= 100.01
+})
 </script>
 
 <template>
@@ -295,21 +339,21 @@ function formatTime(dateStr: string) {
       @success="fetchById(route.params.id as string)"
     />
 
-    <UButton to="/plans" variant="ghost" icon="i-heroicons-arrow-left" color="neutral">Back to Plans</UButton>
+    <UButton to="/plans" variant="ghost" icon="i-heroicons-arrow-left" color="neutral">{{ t('common.back') }}</UButton>
 
     <div v-if="current" class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="flex-1">
-        <UBadge :label="current.status" color="primary" variant="solid" class="mb-2" />
+        <UBadge :label="t(`plans.status_${current.status.toLowerCase()}`)" color="primary" variant="solid" class="mb-2" />
         <h1 class="text-3xl font-bold font-heading">{{ current.title }}</h1>
-        <p class="text-neutral-500 font-medium whitespace-pre-wrap">
-          {{ current.department?.name }} • Year {{ current.year }}
+        <p class="text-neutral-500 font-normal whitespace-pre-wrap">
+          {{ current.department?.name }} • {{ t('common.year') }} {{ current.year }}
           <br v-if="current.description" />
           <span v-if="current.description" class="text-sm">{{ current.description }}</span>
         </p>
 
         <!-- Supervisors Section -->
         <div class="mt-4 flex flex-wrap items-center gap-2">
-          <span class="text-sm font-bold uppercase text-neutral-500">Supervisors:</span>
+          <span class="text-sm font-bold uppercase text-neutral-500">{{ t('plans.supervisors') }}:</span>
           <UBadge
             v-for="s in current.supervisors"
             :key="s.supervisorId"
@@ -328,7 +372,48 @@ function formatTime(dateStr: string) {
           >
             Assign
           </UButton>
-          <span v-else-if="!current.supervisors?.length" class="text-sm italic text-neutral-400">None assigned</span>
+          <span v-else-if="!current.supervisors?.length" class="text-sm italic text-neutral-400">{{ t('common.none') }}</span>
+        </div>
+
+        <!-- Plan Progress & Weight Budget -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+          <!-- Overall Progress -->
+          <div class="p-4 border rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-xs font-bold uppercase text-neutral-500">{{ t('plans.overall_progress') }}</span>
+              <span class="text-lg font-bold text-primary">{{ planWeightedProgress }}%</span>
+            </div>
+            <UProgress :value="planWeightedProgress" size="lg" color="primary" />
+          </div>
+
+          <!-- Weight Budget -->
+          <div 
+            class="p-4 border rounded-xl transition-colors"
+            :class="isWeightValid 
+              ? 'bg-success-50 dark:bg-success-950 border-success-200 dark:border-success-800'
+              : totalWeight.valueOf() > 100 
+                ? 'bg-error-50 dark:bg-error-950 border-error-200 dark:border-error-800' 
+                : 'bg-warning-50 dark:bg-warning-950 border-warning-200 dark:border-warning-800'"
+          >
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-xs font-bold uppercase text-neutral-500">{{ t('plans.weight_budget') }}</span>
+              <span 
+                class="text-lg font-bold"
+                :class="isWeightValid ? 'text-success-600' : totalWeight > 100 ? 'text-error-600' : 'text-warning-600'"
+              >
+                {{ totalWeight }} / 100
+              </span>
+            </div>
+            <UProgress 
+              :value="Math.min(totalWeight, 100)" 
+              size="lg" 
+              :color="isWeightValid ? 'success' : totalWeight > 100 ? 'error' : 'warning'" 
+            />
+            <p class="text-[11px] mt-2" :class="isWeightValid ? 'text-success-600' : 'text-warning-600'">
+              <UIcon :name="isWeightValid ? 'i-heroicons-check-circle' : 'i-heroicons-exclamation-triangle'" class="inline-block mr-1" />
+              {{ isWeightValid ? t('plans.weight_complete') : t('plans.weight_remaining', { n: remainingWeight }) }}
+            </p>
+          </div>
         </div>
       </div>
       <div class="flex gap-2">
@@ -336,12 +421,20 @@ function formatTime(dateStr: string) {
          <UButton
             v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN']) && current.status === 'DRAFT'"
             icon="i-heroicons-check-circle"
-            color="success"
+            :color="isWeightValid ? 'success' : 'neutral'"
+            :disabled="!isWeightValid"
             :loading="isStatusLoading"
             @click="handleStatusChange('ACTIVE')"
          >
-            Approve & Activate
+            {{ t('plans.approve') }}
          </UButton>
+         <UBadge
+            v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN']) && current.status === 'DRAFT' && !isWeightValid && tasks.length > 0"
+            :label="t('plans.weight_must_100')"
+            color="warning"
+            variant="subtle"
+            class="self-center"
+         />
          <UButton
             v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN']) && current.status === 'ACTIVE'"
             icon="i-heroicons-lock-closed"
@@ -350,10 +443,10 @@ function formatTime(dateStr: string) {
             :loading="isStatusLoading"
             @click="handleStatusChange('CLOSED')"
          >
-            Close Plan
+            {{ t('plans.close') }}
          </UButton>
 
-         <UButton v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])" icon="i-heroicons-plus" color="primary" @click="handleCreateTask">Add Task</UButton>
+         <UButton v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])" icon="i-heroicons-plus" color="primary" @click="handleCreateTask">{{ t('plans.add_task') }}</UButton>
          <UButton
             v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN'])"
             icon="i-heroicons-pencil"
@@ -361,7 +454,7 @@ function formatTime(dateStr: string) {
             color="neutral"
             @click="isEditModalOpen = true"
          >
-          Edit Plan
+          {{ t('plans.edit') }}
          </UButton>
       </div>
     </div>
@@ -369,12 +462,46 @@ function formatTime(dateStr: string) {
     <UTabs :items="tabs" class="w-full">
       <template #project>
         <UCard>
-           <UTable :data="projectTasks" :columns="projectColumns" />
+           <UTable :data="projectTasks" :columns="projectColumns">
+             <template #empty-state>
+               <div class="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                 <div class="w-14 h-14 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center">
+                   <UIcon name="i-heroicons-briefcase" class="text-2xl text-primary" />
+                 </div>
+                 <div>
+                   <h3 class="font-bold text-neutral-800 dark:text-neutral-200">{{ t('plans.no_tasks_in_plan') }}</h3>
+                   <p class="text-sm text-neutral-500 mt-1">
+                     {{ hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR']) ? t('plans.no_tasks_hint') : t('plans.no_tasks_officer_hint') }}
+                   </p>
+                 </div>
+                 <UButton v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])" icon="i-heroicons-plus" color="primary" @click="handleCreateTask">
+                   {{ t('plans.add_task') }}
+                 </UButton>
+               </div>
+             </template>
+           </UTable>
         </UCard>
       </template>
       <template #routine>
         <UCard>
-           <UTable :data="routineTasks" :columns="routineColumns" />
+           <UTable :data="routineTasks" :columns="routineColumns">
+             <template #empty-state>
+               <div class="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                 <div class="w-14 h-14 rounded-xl bg-neutral-50 dark:bg-neutral-900/20 flex items-center justify-center">
+                   <UIcon name="i-heroicons-arrow-path" class="text-2xl text-neutral-400" />
+                 </div>
+                 <div>
+                   <h3 class="font-bold text-neutral-800 dark:text-neutral-200">{{ t('plans.no_tasks_in_plan') }}</h3>
+                   <p class="text-sm text-neutral-500 mt-1">
+                     {{ hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR']) ? t('plans.no_tasks_hint') : t('plans.no_tasks_officer_hint') }}
+                   </p>
+                 </div>
+                 <UButton v-if="hasRole(['MANAGER', 'ADMIN_COMPANY', 'SUPER_ADMIN', 'SUPERVISOR'])" icon="i-heroicons-plus" color="primary" @click="handleCreateTask">
+                   {{ t('plans.add_task') }}
+                 </UButton>
+               </div>
+             </template>
+           </UTable>
         </UCard>
       </template>
     </UTabs>
@@ -385,7 +512,7 @@ function formatTime(dateStr: string) {
         <div v-if="selectedTask" class="p-6 space-y-8 overflow-y-auto">
             <header>
                 <div class="flex justify-between items-start mb-2">
-                  <UBadge :label="selectedTask.taskType" color="neutral" variant="outline" />
+                  <UBadge :label="t(`tasks.status_${selectedTask.taskType.toLowerCase()}`)" color="neutral" variant="outline" />
                   <UBadge v-if="selectedTask.taskType === 'ROUTINE'" :label="`${selectedTask.compliance?.compliancePct}% Compliance`" :color="selectedTask.compliance?.compliancePct < 100 ? 'warning' : 'success'" variant="subtle" />
                 </div>
                 <h2 class="text-2xl font-bold font-heading">{{ selectedTask.taskName }}</h2>
@@ -394,11 +521,15 @@ function formatTime(dateStr: string) {
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md">
-                    <p class="text-xs text-neutral-500 uppercase font-bold">Priority</p>
+                    <p class="text-xs text-neutral-500 uppercase font-bold">{{ t('common.priority') }}</p>
                     <p class="font-bold">{{ selectedTask.priority }}</p>
                 </div>
                 <div class="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md">
-                    <p class="text-xs text-neutral-500 uppercase font-bold">Assigned To</p>
+                    <p class="text-xs text-neutral-500 uppercase font-bold">{{ t('tasks.weight') }}</p>
+                    <p class="font-bold">{{ Number(selectedTask.weight || 0) }}%</p>
+                </div>
+                <div class="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-md col-span-2">
+                    <p class="text-xs text-neutral-500 uppercase font-bold">{{ t('tasks.assign_to') }}</p>
                     <p class="font-bold">{{ selectedTask.assignedTo?.firstName }} {{ selectedTask.assignedTo?.lastName }}</p>
                 </div>
             </div>
@@ -406,27 +537,27 @@ function formatTime(dateStr: string) {
             <!-- Routine Specific Metrics -->
             <div v-if="selectedTask.taskType === 'ROUTINE'" class="space-y-6">
                 <div class="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-                  <p class="text-sm font-bold mb-3">Compliance Statistics</p>
+                  <p class="text-sm font-bold mb-3">{{ t('tasks.compliance_stats') }}</p>
                   <div class="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <p class="text-2xl font-bold text-primary">{{ selectedTask.compliance?.completedPeriods }}</p>
-                      <p class="text-xs text-neutral-500 uppercase">Completed</p>
+                      <p class="text-xs text-neutral-500 uppercase">{{ t('tasks.completed_label') }}</p>
                     </div>
                     <div class="border-l border-neutral-100 dark:border-neutral-800">
                       <p class="text-2xl font-bold">{{ selectedTask.compliance?.expectedPeriods }}</p>
-                      <p class="text-xs text-neutral-500 uppercase">Expected</p>
+                      <p class="text-xs text-neutral-500 uppercase">{{ t('tasks.expected_label') }}</p>
                     </div>
                   </div>
                 </div>
 
                 <!-- Tracking Board -->
                 <div class="space-y-4">
-                  <p class="text-sm font-bold uppercase tracking-wider text-neutral-500">Tracking Board</p>
+                  <p class="text-sm font-bold uppercase tracking-wider text-neutral-500">{{ t('tasks.tracking_board') }}</p>
 
                   <UTabs
                     :items="[
-                      { label: 'Calendar', value: 'calendar', icon: 'i-heroicons-calendar-days', slot: 'calendar' },
-                      { label: 'Updates', value: 'history', icon: 'i-heroicons-list-bullet', slot: 'history' }
+                      { label: t('tasks.calendar_view'), value: 'calendar', icon: 'i-heroicons-calendar-days', slot: 'calendar' },
+                      { label: t('tasks.updates_view'), value: 'history', icon: 'i-heroicons-list-bullet', slot: 'history' }
                     ]"
                     class="w-full"
                   >
@@ -442,7 +573,7 @@ function formatTime(dateStr: string) {
                         <div v-if="selectedTask.compliance?.missedDates?.length" class="space-y-2">
                            <p class="text-xs font-bold text-error flex items-center gap-1">
                              <UIcon name="i-heroicons-exclamation-triangle" />
-                             Missed Periods ({{ selectedTask.compliance.missedDates.length }})
+                             {{ t('tasks.missed_label') }} ({{ selectedTask.compliance.missedDates.length }})
                            </p>
                            <div class="flex flex-wrap gap-2">
                              <UBadge
@@ -455,14 +586,14 @@ function formatTime(dateStr: string) {
                              />
                            </div>
                         </div>
-                        <div v-else class="flex items-center gap-2 p-3 bg-success-50 dark:bg-success-950 text-success-700 dark:text-success-300 rounded-md text-xs font-medium">
+                        <div v-else class="flex items-center gap-2 p-3 bg-success-50 dark:bg-success-950 text-success-700 dark:text-success-300 rounded-md text-xs font-normal">
                           <UIcon name="i-heroicons-check-circle" />
-                          All periods updated! Great job.
+                          {{ t('tasks.updates_view') }} — {{ t('tasks.completed_label') }}
                         </div>
 
                         <!-- Mini History Log -->
                         <div class="space-y-3">
-                           <p class="text-xs font-bold uppercase text-neutral-400">Recent Updates</p>
+                           <p class="text-xs font-bold uppercase text-neutral-400">{{ t('tasks.history') }}</p>
                            <div v-if="selectedTask.actuals?.length" class="space-y-3">
                               <div
                                 v-for="log in selectedTask.actuals"
@@ -471,9 +602,14 @@ function formatTime(dateStr: string) {
                               >
                                 <div class="flex justify-between items-start mb-1">
                                   <span class="text-xs font-bold">{{ formatDate(log.actualDate) }}</span>
-                                  <UBadge :label="log.status" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : 'warning'" class="text-[10px]" />
+                                  <UBadge :label="t(`tasks.status_${log.status.toLowerCase()}`)" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : 'warning'" class="text-[10px]" />
                                 </div>
                                 <p v-if="log.note" class="text-[10px] text-neutral-500 italic">{{ log.note }}</p>
+                                <div v-if="log.attachmentUrl" class="mt-2">
+                                  <UButton :to="log.attachmentUrl" target="_blank" size="2xs" color="neutral" variant="soft" icon="i-heroicons-paper-clip">
+                                    Attachment
+                                  </UButton>
+                                </div>
                               </div>
                            </div>
                            <p v-else class="text-center py-6 text-xs text-neutral-400 italic">No updates logged yet.</p>
@@ -527,9 +663,14 @@ function formatTime(dateStr: string) {
                         {{ log.note }}
                       </p>
                     </div>
+                    <div v-if="log.attachmentUrl" class="mt-3 flex">
+                      <UButton :to="log.attachmentUrl" target="_blank" size="xs" color="primary" variant="soft" icon="i-heroicons-paper-clip">
+                        View Attachment
+                      </UButton>
+                    </div>
 
                     <div class="flex justify-end mt-3">
-                       <UBadge :label="log.status" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : log.status === 'PARTIAL' ? 'warning' : 'error'" class="text-[10px] py-0" />
+                       <UBadge :label="t(`tasks.status_${log.status.toLowerCase()}`)" size="sm" variant="subtle" :color="log.status === 'DONE' ? 'success' : log.status === 'PARTIAL' ? 'warning' : 'error'" class="text-[10px] py-0" />
                     </div>
                   </div>
                 </div>

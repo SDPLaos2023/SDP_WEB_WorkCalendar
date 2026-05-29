@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 import { DepartmentSchema } from '~~/shared/schemas/department.schema'
@@ -96,11 +97,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       body
     })
 
-    useToast().add({ title: 'Success', description: `Department saved successfully`, color: 'success' })
+    useToast().add({ title: t('common.success'), description: `Department saved successfully`, color: 'success' })
     emit('success')
     open.value = false
   } catch (err: any) {
-    useToast().add({ title: 'Error', description: err.data?.statusMessage || err.message, color: 'error' })
+    useToast().add({ title: t('common.error'), description: err.data?.statusMessage || err.message, color: 'error' })
   } finally {
     loading.value = false
   }
@@ -108,12 +109,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="department ? 'Edit Department' : 'Create Department'" :description="department ? `Editing ${department.name}` : 'Add a new department to the system'">
+  <UModal v-model:open="open" :title="department ? t('common.edit') : t('common.create')" :description="department ? `Editing ${department.name}` : 'Add a new department to the system'">
     <template #content>
       <UForm :schema="FormSchema" :state="state" class="p-6 space-y-4" @submit="onSubmit">
-        <h3 class="text-lg font-semibold mb-4">{{ department ? 'Edit Department' : 'Create Department' }}</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ department ? t('common.edit') : t('common.create') }}</h3>
 
-        <UFormField v-if="role === 'SUPER_ADMIN' && !department" label="Company" name="companyId">
+        <UFormField v-if="role === 'SUPER_ADMIN' && !department" :label="t('management.company')" name="companyId">
           <USelect
             v-model="state.companyId"
             :items="companies"
@@ -125,11 +126,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
           />
         </UFormField>
 
-        <UFormField label="Department Name" name="name">
+        <UFormField :label="t('management.department')" name="name">
           <UInput v-model="state.name" class="w-full" placeholder="Enter department name" />
         </UFormField>
 
-        <UFormField label="Department Code" name="code">
+        <UFormField label="Code" name="code">
           <UInput
             v-model="state.code"
             class="w-full uppercase"
@@ -139,8 +140,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         </UFormField>
 
         <div class="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <UButton label="Cancel" color="neutral" variant="ghost" @click="open = false; $emit('close')" />
-          <UButton type="submit" :label="department ? 'Update' : 'Save'" :loading="loading" />
+          <UButton :label="t('common.cancel')" color="neutral" variant="ghost" @click="open = false; $emit('close')" />
+          <UButton type="submit" :label="department ? t('common.save') : t('common.create')" :loading="loading" />
         </div>
       </UForm>
     </template>

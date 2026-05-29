@@ -4,8 +4,21 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@vueuse/nuxt',
-    'nuxt-auth-utils'
+    'nuxt-auth-utils',
+    '@nuxtjs/i18n'
   ],
+
+  i18n: {
+    locales: [
+      { code: 'en', name: 'English', file: 'en.ts' },
+      { code: 'lo', name: 'Lao', file: 'lo.ts' },
+      { code: 'th', name: 'Thai', file: 'th.ts' }
+    ],
+    defaultLocale: 'lo',
+    lazy: true,
+    langDir: 'locales/',
+    strategy: 'no_prefix'
+  },
 
   devtools: {
     enabled: true

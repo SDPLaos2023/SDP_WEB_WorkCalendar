@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const props = withDefaults(defineProps<{
   title?: string
   description?: string
@@ -8,13 +9,14 @@ const props = withDefaults(defineProps<{
   icon?: string
   loading?: boolean
 }>(), {
-  title: 'ຢືນຢັນການດຳເນີນການ',
-  description: 'ທ່ານແນ່ໃຈຫຼືບໍ່ທີ່ຈະດຳເນີນການນີ້?',
-  confirmLabel: 'ຢືນຢັນ',
-  cancelLabel: 'ຍົກເລີກ',
   color: 'error',
   icon: 'i-lucide-alert-triangle'
 })
+
+const finalTitle = computed(() => props.title || t('plans.confirm_delete'))
+const finalDescription = computed(() => props.description || t('plans.confirm_delete'))
+const finalConfirm = computed(() => props.confirmLabel || t('common.submit'))
+const finalCancel = computed(() => props.cancelLabel || t('common.cancel'))
 
 const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits(['confirm', 'close'])
@@ -30,7 +32,7 @@ function handleConfirm() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="title" :description="description">
+  <UModal v-model:open="open" :title="finalTitle" :description="finalDescription">
     <slot name="trigger" />
 
     <template #content>
@@ -43,20 +45,20 @@ function handleConfirm() {
             <UIcon :name="icon" class="size-6" />
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-highlighted">{{ title }}</h3>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ description }}</p>
+            <h3 class="text-lg font-semibold text-highlighted">{{ finalTitle }}</h3>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ finalDescription }}</p>
           </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-6 border-t border-default">
           <UButton
-            :label="cancelLabel"
+            :label="finalCancel"
             color="neutral"
             variant="ghost"
             @click="handleCancel"
           />
           <UButton
-            :label="confirmLabel"
+            :label="finalConfirm"
             :color="color"
             variant="solid"
             :loading="loading"

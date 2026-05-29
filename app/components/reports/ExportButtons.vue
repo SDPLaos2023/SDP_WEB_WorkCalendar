@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const props = defineProps<{
   showPrint?: boolean
   showCSV?: boolean
@@ -21,7 +22,7 @@ const handlePrint = () => {
       color="neutral"
       @click="handlePrint"
     >
-      Print / PDF
+      {{ t('reports.print') }}
     </UButton>
 
     <UButton
@@ -32,7 +33,7 @@ const handlePrint = () => {
       :loading="loading"
       @click="emit('csv')"
     >
-      Export CSV
+      {{ t('reports.export_csv') }}
     </UButton>
   </div>
 </template>

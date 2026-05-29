@@ -5,11 +5,11 @@ import { createPlanTaskSchema } from '../../../../../shared/schemas/plan-task.sc
 
 export default defineEventHandler(async (event) => {
     try {
-        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR'])
+        const user = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR', 'OFFICER'])
         const workPlanId = event.context.params?.id
 
         if (!workPlanId) {
-            throw createError({ statusCode: 400, statusMessage: 'Missing work plan ID' })
+            throw createError({ statusCode: 400, statusMessage: 'common.error_missing_id' })
         }
 
         // 1. Fetch Work Plan and verify access
@@ -19,18 +19,20 @@ export default defineEventHandler(async (event) => {
         })
 
         if (!workPlan) {
-            throw createError({ statusCode: 404, statusMessage: 'Work plan not found' })
+            throw createError({ statusCode: 404, statusMessage: 'common.error_not_found' })
         }
 
         if (user.role === 'SUPERVISOR') {
             const isAssigned = (workPlan as any).supervisors.some((s: any) => s.supervisorId === user.id)
             if (!isAssigned) {
-                throw createError({ statusCode: 403, statusMessage: 'Forbidden: You are not assigned to this work plan' })
+                throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
             }
         } else if (user.role === 'MANAGER' && workPlan.departmentId !== user.departmentId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only add tasks to your own department plans' })
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
+        } else if (user.role === 'OFFICER' && workPlan.departmentId !== user.departmentId) {
+            throw createError({ statusCode: 403, statusMessage: 'common.error_forbidden' })
         } else if (user.role === 'ADMIN_COMPANY' && workPlan.department.companyId !== user.companyId) {
-            throw createError({ statusCode: 403, statusMessage: 'Forbidden: Access denied to other company work plan' })
+            throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
         }
 
         // 2. Validate Body
@@ -47,12 +49,14 @@ export default defineEventHandler(async (event) => {
         const taskData = result.data
 
         // 3. Verify assignedToId (Optional)
-        if (taskData.assignedToId) {
+        let assignedToId = taskData.assignedToId
+        if (assignedToId === '') assignedToId = null
+
+        if (assignedToId) {
             const assignedUser = await prisma.user.findFirst({
                 where: {
-                    id: taskData.assignedToId,
-                    role: 'OFFICER',
-                    departmentId: workPlan.departmentId,
+                    id: assignedToId,
+                    companyId: workPlan.department.companyId,
                     deletedAt: null
                 }
             })
@@ -60,7 +64,7 @@ export default defineEventHandler(async (event) => {
             if (!assignedUser) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: 'Assigned user must be an OFFICER in the same department as the plan'
+                    statusMessage: 'Assigned user must be in the same company'
                 })
             }
         }
@@ -69,18 +73,19 @@ export default defineEventHandler(async (event) => {
         const createData: any = {
             workPlanId,
             supervisorId: taskData.supervisorId || (user.role === 'SUPERVISOR' ? user.id : null),
-            assignedToId: taskData.assignedToId,
+            assignedToId: assignedToId || null,
             createdById: user.id,
             taskName: taskData.taskName,
             description: taskData.description,
             taskType: taskData.taskType,
             priority: taskData.priority,
+            weight: taskData.weight ?? 0,
             status: 'PENDING'
         }
 
         if (taskData.taskType === 'PROJECT') {
-            const start = new Date(taskData.plannedStart)
-            const end = new Date(taskData.plannedEnd)
+            const start = new Date(`${taskData.plannedStart}T00:00:00Z`)
+            const end = new Date(`${taskData.plannedEnd}T00:00:00Z`)
             const diffMs = end.getTime() - start.getTime()
             const plannedDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1)
 
@@ -91,8 +96,9 @@ export default defineEventHandler(async (event) => {
             createData.isRecurring = true
             createData.recurrenceType = taskData.recurrenceType
             createData.recurrenceDay = taskData.recurrenceDay
-            createData.recurrenceStart = new Date(taskData.recurrenceStart)
-            createData.recurrenceEnd = new Date(taskData.recurrenceEnd)
+            createData.recurrenceStart = new Date(`${taskData.recurrenceStart}T00:00:00Z`)
+            createData.recurrenceEnd = new Date(`${taskData.recurrenceEnd}T00:00:00Z`)
+            createData.plannedWeeks = taskData.plannedWeeks ?? null
         }
 
         // 5. Create Task
@@ -116,6 +122,10 @@ export default defineEventHandler(async (event) => {
     } catch (error: any) {
         if (error.statusCode) throw error
         console.error('[CREATE_TASK_ERROR]:', error)
-        throw createError({ statusCode: 500, statusMessage: 'Internal server error' })
+        // Temporarily include error message for debugging
+        throw createError({ 
+            statusCode: 500, 
+            statusMessage: process.env.NODE_ENV === 'development' ? `Internal Error: ${error.message}` : 'common.error_internal' 
+        })
     }
 })

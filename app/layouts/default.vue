@@ -1,43 +1,64 @@
 <script setup lang="ts">
+const { t, locale, setLocale } = useI18n()
 const { user, logout, hasRole } = useAuth()
 const route = useRoute()
 
 const navigation = computed(() => {
   const links = [
-    { label: 'Dashboard', icon: 'i-heroicons-home', to: '/dashboard' },
-    { label: 'Work Plans', icon: 'i-heroicons-calendar-days', to: '/plans' },
-    { label: 'My Tasks', icon: 'i-heroicons-clipboard-document-check', to: '/tasks' },
+    { label: t('navigation.dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
+    { label: t('navigation.work_plans'), icon: 'i-heroicons-calendar-days', to: '/plans' },
+    { label: t('navigation.my_tasks'), icon: 'i-heroicons-clipboard-document-check', to: '/tasks' },
   ]
 
   // Add management links if applicable
-  if (hasRole(['SUPER_ADMIN']).value) {
-    links.push({ label: 'Companies', icon: 'i-heroicons-building-office-2', to: '/companies' })
+  if (hasRole(['SUPER_ADMIN'])) {
+    links.push({ label: t('navigation.companies'), icon: 'i-heroicons-building-office-2', to: '/companies' })
   }
-  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY']).value) {
-    links.push({ label: 'Departments', icon: 'i-heroicons-rectangle-stack', to: '/departments' })
+  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY'])) {
+    links.push({ label: t('navigation.departments'), icon: 'i-heroicons-rectangle-stack', to: '/departments' })
   }
-  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER']).value) {
-    links.push({ label: 'Users', icon: 'i-heroicons-users', to: '/users' })
+  if (hasRole(['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER'])) {
+    links.push({ label: t('navigation.users'), icon: 'i-heroicons-users', to: '/users' })
   }
-  links.push({ label: 'Reports', icon: 'i-heroicons-chart-bar', to: '/reports' })
+  links.push({ label: t('navigation.reports'), icon: 'i-heroicons-chart-bar', to: '/reports' })
 
   return links
 })
 
-const userMenuItems = [
+const userMenuItems = computed(() => [
   [{
-    label: 'Profile',
+    label: t('common.details'),
     icon: 'i-heroicons-user'
   }, {
-    label: 'Settings',
-    icon: 'i-heroicons-cog-8-tooth'
+    label: t('common.language') || 'Language',
+    icon: 'i-heroicons-language',
+    children: [
+      {
+        label: 'ພາສາລາວ',
+        type: 'checkbox',
+        checked: locale.value === 'lo',
+        onSelect: (e: Event) => { e.preventDefault(); setLocale('lo') }
+      },
+      {
+        label: 'ไทย',
+        type: 'checkbox',
+        checked: locale.value === 'th',
+        onSelect: (e: Event) => { e.preventDefault(); setLocale('th') }
+      },
+      {
+        label: 'English',
+        type: 'checkbox',
+        checked: locale.value === 'en',
+        onSelect: (e: Event) => { e.preventDefault(); setLocale('en') }
+      }
+    ]
   }],
   [{
-    label: 'Logout',
+    label: t('auth.logout'),
     icon: 'i-heroicons-log-out',
     onSelect: logout
   }]
-]
+])
 </script>
 
 <template>

@@ -4,8 +4,8 @@ import { paginate } from '../../utils/pagination'
 
 export default defineEventHandler(async (event) => {
     try {
-        // 1. Authorization: Only SUPER_ADMIN, ADMIN_COMPANY, MANAGER or SUPERVISOR can list users
-        const sessionUser = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR'])
+        // 1. Authorization: Allow OFFICER so they can load user lists for assignments
+        const sessionUser = requireRole(event, ['SUPER_ADMIN', 'ADMIN_COMPANY', 'MANAGER', 'SUPERVISOR', 'OFFICER'])
 
         // 2. Extract Query Params
         const query = getQuery(event)
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
         } else if (sessionUser.role === 'ADMIN_COMPANY') {
             where.companyId = sessionUser.companyId
             if (departmentId) where.departmentId = departmentId
-        } else if (sessionUser.role === 'MANAGER' || sessionUser.role === 'SUPERVISOR') {
+        } else if (['MANAGER', 'SUPERVISOR', 'OFFICER'].includes(sessionUser.role)) {
             where.companyId = sessionUser.companyId
             where.departmentId = sessionUser.departmentId
         }

@@ -30,7 +30,7 @@ export const useAuth = () => {
   const userRole = computed(() => user.value?.role)
 
   const hasRole = (roles: Role[]) => {
-    return computed(() => user.value ? roles.includes(user.value.role) : false)
+    return user.value ? roles.includes(user.value.role) : false
   }
 
   const login = async (username: string, password: string) => {
